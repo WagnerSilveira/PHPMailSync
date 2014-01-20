@@ -175,8 +175,8 @@ class Imap{
          $this->quota = imap_get_quotaroot($this->stream,$mailbox);    
     }
 }
-$origem =  new Imap("imap.gmail.com","wagnerhsilveira@gmail.com","6096412132","imap",1);
-$destino= new Imap("imap.wagnersilveira.kinghost.net","teste@wagnersilveira.kinghost.net","40302010aa","imap",0);
+$origem =  new Imap("","","","",1);
+$destino= new Imap("","","","",0);
 
 if(!$origem->testarConexao()){
 	echo "Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco:<strong> $origem->servidor </strong> na porta <strong> $origem->porta </strong>";
