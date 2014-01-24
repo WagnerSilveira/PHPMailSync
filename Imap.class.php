@@ -9,7 +9,9 @@ class Imap{
 	private $mbox;
 	private $quota;
 	private $pastas;
-    private $tipo;
+	private $separador;
+	private $prefixo;
+	private $tipo;
 	private $stream;
 	
 	public function __construct($servidor,$usuario,$senha,$tipo,$ssl){
@@ -28,12 +30,12 @@ class Imap{
        if($this->tipo=="imap"){
 	          if($this->ssl==1){
                     $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-                    $this->stream =@imap_open($this->mbox,$this->usuario, $this->senha,1);
+                    $this->stream =@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
 					return $this->stream;
                     
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,1);
+                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
 					return $this->stream;
                }
           } //fecha if IMAP
@@ -41,11 +43,11 @@ class Imap{
                if($this->ssl==1){
 			   
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-                    $this->stream= @imap_open($this->mbox,$this->usuario,$this->senha,1);
+                    $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
 				    return $this->stream;
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-                    $this->stream= @imap_open($this->mbox,$this->usuario,$this->senha,1);
+                    $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
 				    return $this->stream;
                }
          }//fecha if POP3 
@@ -100,6 +102,17 @@ class Imap{
 		      }
 		}    
 	}
+	public function verificarTipoSeparador($pasta){
+		$this->separador=$pasta;
+	}
+	
+	public function verificarPrefixo($pasta){
+		if(strstr($pasta, 'INBOX.')){
+			 $this->prefixo='INBOX.';
+			return  $this->prefixo;
+		}
+	}
+	
 	
 	public function verificarPorgentagemDeUso(){
 		$quotaDeUsoMB = $this->quota["usage"]*1024/1048576;
@@ -142,27 +155,38 @@ class Imap{
 		}
 	}
 	
-	public function validarMailBox(){
-	      $this->pastas=imap_list($this->stream,$this->mbox,"*");
-		 foreach($this->pastas as $pasta){
-			$pos = strpos($pasta,"}");
-			$this->pastas = substr($pasta,$pos+1);
-			$this->pastas =imap_utf7_decode($this->pastas);
-			$this->pastas= str_replace("/",".",$this->pastas);
-			echo $this->pastas."\n";
-		}
+	/* public function listarMailBox(){
+	    $this->pastas= imap_list($this->stream,$this->mbox, "*");
+		return $this->pastas;
+	} */
+	
+	/* public function listarPastas($mailbox){
+		$pos = strpos($mailbox,"}");
+		$this->pastas = substr($mailbox,$pos+1);
+		$this->pastas=str_replace("INBOX.INBOX","INBOX",$this->pastas);
+		return $this->pastas;
+	} */
+	
+	public function listarMailBox(){
+	    $this->pastas= imap_getmailboxes($this->stream,$this->mbox, "*");
+		return $this->pastas;
+	}
+	public function listarPastas($mailbox){//teste
+		$pos = strpos($mailbox,"}");
+		$this->pastas = substr($mailbox,$pos+1);
+		return $this->pastas;
 	}
 	
 	
-    public function listarMailBoxes(){
-        $this->pastas=imap_list($this->stream,$this->mbox,"*");
-        foreach($this->pastas as $pasta){
-			$pos = strpos($pasta,"}");
-			$this->pastas = substr($pasta,$pos+1);
-			$this->pastas =imap_utf7_decode($this->pastas);
-			echo $this->pastas."\n";
-        } 
-    }
+	public function listarTotalMensagensPorMailbox($pasta){
+		$mailbox= imap_open($pasta,$this->usuario,$this->senha,1);
+		$cabecalho = imap_headers($mailbox);
+		$total = count($cabecalho);
+		imap_close($mailbox);
+		return "Total de mensagens: $total mensagens";
+		
+	}
+	
     public function verificarQuota(){
          $this->quota = imap_get_quotaroot($this->stream, "INBOX");
 		 return ('<br/>USO: '.$this->verificarQuotaDeUso().
@@ -175,48 +199,3 @@ class Imap{
          $this->quota = imap_get_quotaroot($this->stream,$mailbox);    
     }
 }
-$origem =  new Imap("","","","",1);
-$destino= new Imap("","","","",0);
-
-if(!$origem->testarConexao()){
-	echo "Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco:<strong> $origem->servidor </strong> na porta <strong> $origem->porta </strong>";
-	exit;
-}
-if(!$origem->conectar()){
-	echo "Falha de autenticacao no servidor de origem: $origem->servidor com a conta $origem->usuario <br />";
-	exit;
-}
-if(!$destino->testarConexao()){
-	echo "Nao foi possivel conectar o servidor de destino, o servidor nao respondeu atraves do endereco:<strong>  $destino->servidor </strong> na porta <strong>  $destino->porta </strong>";
-	exit;
-}
-if(!$destino->conectar()){
-	echo "Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario <br />";
-	exit;
-}
-
-echo "<pre>";
-$origem->listarMailBoxes();
-echo "</pre>";
-
-echo "<pre>";
-$origem->validarMailBox();
-echo "</pre>";
-$origem_quota = $origem->verificarQuota();
-
-
-echo $origem_quota."<br /> ";
-
-
-
-echo "<pre>";
-$destino_inbox= $destino->listarMailBoxes();
-echo "</pre>";
-$destino_quota = $destino->verificarQuota();// Não funciona com POP3
-echo $destino_quota."<br /> "; 
-
-
-/* if($origem_quota > $destino_quota){
-	echo "<br/>O espaco no destino deve ser igual ou maior a  $origem_quota MB ";
-} */
-?>
