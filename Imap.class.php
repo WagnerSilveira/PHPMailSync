@@ -154,12 +154,13 @@ class Imap{
 	}
 	
 	public function migrarMensagens($origem,$pastas){
-	$origemMailbox= @imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
-	//$destinoMailbox= @imap_open($this->mailbox.$pastas,$this->usuario,$this->senha);
-	var_dump($origemMailbox);
-	imap_close($origemMailbox);
-	//var_dump($destinoMailbox);
-	}
+        //$origemMailbox=@imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
+        $this->listarPastas($pastas);
+
+         echo "Pasta Origem:".$pastas."\n";
+         echo "Pasta Destino:". $this->verificarPadraoMailbox($origem,$this->listarPastas($pastas))."\n";
+        //imap_close($origemMailbox); 
+        }
 	
 	
 	public function listarTotalMensagensPorMailbox($pasta){
