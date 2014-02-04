@@ -7,6 +7,9 @@ class Imap{
 	private $senha;
 	private $mbox;
 	private $quota;
+	private $quotaEmUso;
+	private $quotaDisponivel;
+	private $quotaTotal;
 	private $pastas;
 	private $separador;
 	private $prefixo;
@@ -63,8 +66,7 @@ class Imap{
 	      }
 	       if($this->tipo=="pop3"){
 				$this->porta=($this->ssl==1)?'995':'110';
-	      }
-	           
+	      }  
      }
 	
 	public function testarConexao(){
@@ -94,8 +96,8 @@ class Imap{
 	} 
 	public function listarPastas($mailbox){
 		$pos = strpos($mailbox,"}");
-		$this->pastas = substr($mailbox,$pos+1);
-		return $this->pastas;
+		$pastas = substr($mailbox,$pos+1);
+		return $pastas;
 	}
 
 
@@ -106,68 +108,44 @@ class Imap{
 	 }
 	 
 	// Funçao para ser utilizada no host de destino
-	public function alterarPadraoMailbox($origem,$pastas){
-	     $delimitador= $origem->verificarTipoSeparador();
-	     $this->listarMailBox();
-	     $this->verificarTipoSeparador();
-	     $pastas_novoarray=explode($delimitador,$pastas);
-          $pastas=implode($this->separador,$pastas_novoarray);
+	public function verificarPadraoMailbox($origem,$pastas){
+			/*Esta função necessita das funções abaixo
+				$this->listarMailBox();
+				$this->verificarTipoSeparador();
+			
+			*/
+		$delimitador= $origem->verificarTipoSeparador();
+		$pastas_novoarray=explode($delimitador,$pastas);
+	        $pastas=implode($this->separador,$pastas_novoarray);
           
 	     if(@preg_grep("/INBOX".$this->separador."/",$this->pastas)){
 					$pastas="INBOX".$this->separador.$pastas; 
 					$pastas= str_replace('INBOX'.$this->separador.'INBOX','INBOX',$pastas);
-					 if(! array_search($this->mbox.$pastas,$this->pastas)){
-							$pastas =imap_utf7_decode($pastas);
-							if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-								imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas));
-								return " Pasta: $pastas  criada com sucesso !"."\n";
-							}else{
-								$erros = imap_errors();
-								return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
-							}
-						
-                      }
+					return $pastas;
 	     }else if(@preg_grep("/Inbox".$this->separador."/",$this->pastas)) {
-				$pastas="Inbox".$this->separador.$pastas; 
-				$pastas=str_replace('Inbox'.$this->separador.'Inbox','Inbox',$pastas);
-				
-				if(! array_search($this->mbox.$pastas,$this->pastas)){
-						$pastas =imap_utf7_decode($pastas);
-						if(imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-							imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas));
-							return " Pasta: $pastas criada com sucesso !"."\n";
-						}else{
-							$erros = imap_errors();
-							return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
-						}
-				}
+					$pastas="Inbox".$this->separador.$pastas; 
+					$pastas=str_replace('Inbox'.$this->separador.'Inbox','Inbox',$pastas);
+					return $pastas;
 		 }else{
-				if(preg_match("/INBOX\\".$this->separador."/",$pastas) == true){
-					$pastas=@preg_filter("/INBOX\\".$this->separador."/","",$pastas);
+				if(preg_match("/INBOX\\".$this->separador."/",$pastas)){
+						$pastas=@preg_filter("/INBOX\\".$this->separador."/","",$pastas);
+						return $pastas;
 				}
-				if(preg_match("/Inbox\\".$this->separador."/",$pastas) == true){
-					$pastas=@preg_filter("/Inbox\\".$this->separador."/","",$pastas);
+				if(preg_match("/Inbox\\".$this->separador."/",$pastas)){
+						$pastas=@preg_filter("/Inbox\\".$this->separador."/","",$pastas);
+						return $pastas;
+					
 				}
-				 if(! array_search($this->mbox.$pastas,$this->pastas)){
-							$pastas =imap_utf7_decode($pastas);
-						 	if(imap_createmailbox($this->stream,imap_utf7_encode($this->mbox.$pastas))){
-								imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas));
-								return " Pasta: $pastas criada com sucesso !"."\n";
-							}else{
-								$erros = imap_errors();
-								return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
-							} 
-				} 
 		}
-		
 	}
 	public function criarMailboxInexistentes($pastas){
-	
 	      if(! array_search($this->mbox.$pastas,$this->pastas)){
 			$pastas =imap_utf7_decode($pastas);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-				imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas));
-				return " Pasta: $pastas  criada com sucesso !"."\n";
+					return " Pasta: $pastas  criada com sucesso !"."\n";
+				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
+					return "Falha na inscrição da pasta: $pastas"."\n";
+				}
 			}else{
 				$erros = imap_errors();
 				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
@@ -192,73 +170,85 @@ class Imap{
 		return "Total de mensagens: $total mensagens";
 		
 	}
+	public function receberInfoQuotaTotal(){
+		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
+	}
 	
 	public function verificarQuotaDeUso(){
 		$quotaDeUsoKB = ($this->quota["usage"]);
 		$quotaDeUsoMB = ($this->quota["usage"]*1024)/1048576;
 		$quotaDeUsoGB = ($this->quota["usage"]*1024)/1073741824; 
-          if($quotaDeUsoMB >= 1024){
-		     return number_format($quotaDeUsoGB,2)." GB"; 
+         if($quotaDeUsoMB >= 1024){
+			$this->quotaEmUso = number_format($quotaDeUsoGB,2)." GB"; 
+		     return $this->quotaEmUso;
 		}else{
 		      if($quotaDeUsoKB >= 1024){
-			     $quotaDeUsoMB = number_format($quotaDeUsoMB,2);
-			     return  $quotaDeUsoMB." MB";
+			     $this->quotaEmUso = number_format($quotaDeUsoMB,2)." MB";
+				 return $this->quotaEmUso;
+				 
 		      }else{
-			     return  $quotaDeUsoKB." KB";
+				$this->quotaEmUso = $quotaDeUsoKB." KB";
+			     return $this->quotaEmUso;
 		      }
 		}    
 	}
-
-	public function verificarPorgentagemDeUso(){
-		$quotaDeUsoMB = $this->quota["usage"]*1024/1048576;
-		$limite=$this->quota["limit"]*1024/1048576;
-		$quotaDeUso1=$quotaDeUsoMB*100;
-		$quotaDeUso2= round ($quotaDeUso1/$limite,0);
-		return  $quotaDeUso2;
-		
-          
-	}
-	
 	public function verificarQuotaDisponivel(){
+		//Usar apenas para a Raiz (INBOX)
 		$quotaDisponivelKB =($this->quota["limit"] - $this->quota["usage"]);
 		$quotaDisponivelMB =($this->quota["limit"] - $this->quota["usage"])*1024/1048576;
 		$quotaDisponivelGB =($this->quota["limit"] - $this->quota["usage"])*1024/1073741824;
 		  
 		if($quotaDisponivelMB >= 1024 ){
-               return number_format($quotaDisponivelGB,2)." GB";
+			$this->quotaDisponivel=number_format($quotaDisponivelGB,2)." GB";
+            return $this->quotaDisponivel;
 		}else{
 		     if($quotaDisponivelKB >= 1024){
-		          return number_format($quotaDisponivelMB,2)." MB";
+				$this->quotaDisponivel=number_format($quotaDisponivelMB,2)." MB";
+		         return $this->quotaDisponivel; 
 		      }else{
-		          return $quotaDisponivelKB." KB";
+				$this->quotaDisponivel=$quotaDisponivelKB." KB";
+		        return $this->quotaDisponivel;
 		      }
 		}
 	}
-		public function verificarQuotaTotal(){
+	public function verificarPorgentagemDeUso(){
+		//Usar apenas para a Raiz (INBOX)
+		$quotaDeUsoMB = $this->quota["usage"]*1024/1048576;
+		$limite=$this->quota["limit"]*1024/1048576;
+		$quotaDeUso1=$quotaDeUsoMB*100;
+		$quotaDeUso2= round ($quotaDeUso1/$limite,0);
+		return  $quotaDeUso2." %";
+	}
+	
+	public function verificarQuotaTotal(){
+		//Usar apenas para a Raiz (INBOX)
 		$quotaTotalKB =($this->quota["limit"]);
 		$quotaTotalMB =($this->quota["limit"])*1024/1048576;
 		$quotaTotalGB =($this->quota["limit"])*1024/1073741824;
 		  
 		if($quotaTotalMB >= 1024 ){
-               return number_format($quotaTotalGB,2)." GB";
+			   $this->quotaTotal=number_format($quotaTotalGB,2)." GB";
+			   return $this->quotaTotal;
 		}else{
-		     if($quotaTotalKB >= 1024){
-		          return number_format($quotaTotalMB,2)." MB";
-		      }else{
-		          return $quotaTotalKB." KB";
-		      }
+			 if($quotaTotalKB >= 1024){
+				$this->quotaTotal= number_format($quotaTotalMB,2)." MB";
+				return $this->quotaTotal;
+			  }else{
+				$this->quotaTotal= $quotaTotalKB." KB";
+				return $this->quotaTotal;
+			  }
 		}
 	}
-
-    public function verificarQuota(){
-         $this->quota = imap_get_quotaroot($this->stream, "INBOX");
-		 return ('<br/>USO: '.$this->verificarQuotaDeUso().
-		 '<br/>PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso()." %".
-		 '<br/>DISPONIVEL: '.$this->verificarQuotaDisponivel().
-		 '<br/>TOTAL: '.$this->verificarQuotaTotal().'<br />'
+    public function verificarInfoQuota(){
+		$this->receberInfoQuotaTotal();
+		 return ('USO: '.$this->verificarQuotaDeUso().
+		 '\n PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
+		 '\n DISPONIVEL: '.$this->verificarQuotaDisponivel().
+		 '\n TOTAL: '.$this->verificarQuotaTotal().'<br />'
 		 );
     }
-	public function verificarQuotaMailBoxes($mailbox){
-         $this->quota = imap_get_quotaroot($this->stream,$mailbox);    
+	public function verificarQuotaPorPasta($mailbox){
+         $this->quota=imap_get_quotaroot($this->stream,$mailbox);  
+		 
     }
 }
