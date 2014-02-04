@@ -115,8 +115,8 @@ class Imap{
 			
 			*/
 		$delimitador= $origem->verificarTipoSeparador();
-		$pastas_novoarray=explode($delimitador,$pastas);
-	        $pastas=implode($this->separador,$pastas_novoarray);
+	    $pastas_novoarray=explode($delimitador,$pastas);
+        $pastas=implode($this->separador,$pastas_novoarray);
           
 	     if(@preg_grep("/INBOX".$this->separador."/",$this->pastas)){
 					$pastas="INBOX".$this->separador.$pastas; 
@@ -150,8 +150,8 @@ class Imap{
 				$erros = imap_errors();
 				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
 			}
+		}
 	}
-	
 	
 	public function migrarMensagens($origem,$pastas){
 	$origemMailbox= @imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
