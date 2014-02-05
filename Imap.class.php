@@ -154,6 +154,7 @@ class Imap{
 	}
 	
 	public function migrarMensagens($origem,$pastas){
+	//Teste GitHub 
         //$origemMailbox=@imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
         $this->listarPastas($pastas);
 
