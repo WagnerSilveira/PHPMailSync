@@ -28,6 +28,9 @@ class Imap{
 		$this->$atributo = $valor;
 	}
 	
+	/*
+	Função Conectar Original
+	
 	public function conectar(){
        if($this->tipo=="imap"){
 	          if($this->ssl==1){
@@ -55,6 +58,42 @@ class Imap{
          }//fecha if POP3 
 	
 	}
+	*/
+	
+	// Função conectar com argumento conectar(pasta)
+	
+	public function conectar(){
+	            $numargs = func_num_args();
+	            if($numargs==1){
+	                 $this->pastas=func_get_args();
+	                 $this->pastas=$this->pastas[0];
+	            }
+                 if($this->tipo=="imap"){
+	                    if($this->ssl==1){
+                              $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
+                              $this->stream = @imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
+					        return $this->stream;
+                         }else{
+                              $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
+                              $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
+					          return $this->stream;
+                         }
+                    } //fecha if IMAP
+                   if($this->tipo=="pop3"){
+                         if($this->ssl==1){
+			             
+                              $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
+                              $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
+				              return $this->stream;
+                         }else{
+                              $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
+                              $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
+				              return $this->stream;
+                         }
+                   }//fecha if POP3 
+	     
+	}
+	
 	public function receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->servidor=$servidor;
 	      $this->usuario=$usuario;
@@ -142,7 +181,7 @@ class Imap{
 	      if(! array_search($this->mbox.$pastas,$this->pastas)){
 			$pastas =imap_utf7_decode($pastas);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-					return " Pasta: $pastas  criada com sucesso !"."\n";
+				return " Pasta: $pastas  criada com sucesso !"."\n";
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
 					return "Falha na inscrição da pasta: $pastas"."\n";
 				}
@@ -153,13 +192,12 @@ class Imap{
 		}
 	}
 	
-	public function migrarMensagens($origem,$pastas){
-	//Teste GitHub 
-        //$origemMailbox=@imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
-        $this->listarPastas($pastas);
+	public function migrarMensagensImap($origem,$pastas){
+        $origemMailbox=@imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
+        $destinoMailbox=@imap_open($this->mailbox.$pastas,$this->usuario,$this->senha);
 
-         echo "Pasta Origem:".$pastas."\n";
-         echo "Pasta Destino:". $this->verificarPadraoMailbox($origem,$this->listarPastas($pastas))."\n";
+         //echo "Pasta Origem:".$pastas."\n";
+        // echo "Pasta Destino:". $this->verificarPadraoMailbox($origem,$this->listarPastas($pastas))."\n";
         //imap_close($origemMailbox); 
         }
 	
@@ -185,12 +223,12 @@ class Imap{
 		     return $this->quotaEmUso;
 		}else{
 		      if($quotaDeUsoKB >= 1024){
-			     $this->quotaEmUso = number_format($quotaDeUsoMB,2)." MB";
-				 return $this->quotaEmUso;
+                    $this->quotaEmUso = number_format($quotaDeUsoMB,2)." MB";
+                    return $this->quotaEmUso;
 				 
 		      }else{
-				$this->quotaEmUso = $quotaDeUsoKB." KB";
-			     return $this->quotaEmUso;
+                    $this->quotaEmUso = $quotaDeUsoKB." KB";
+                    return $this->quotaEmUso;
 		      }
 		}    
 	}
@@ -205,11 +243,11 @@ class Imap{
             return $this->quotaDisponivel;
 		}else{
 		     if($quotaDisponivelKB >= 1024){
-				$this->quotaDisponivel=number_format($quotaDisponivelMB,2)." MB";
-		         return $this->quotaDisponivel; 
+                    $this->quotaDisponivel=number_format($quotaDisponivelMB,2)." MB";
+                    return $this->quotaDisponivel; 
 		      }else{
-				$this->quotaDisponivel=$quotaDisponivelKB." KB";
-		        return $this->quotaDisponivel;
+                    $this->quotaDisponivel=$quotaDisponivelKB." KB";
+                    return $this->quotaDisponivel;
 		      }
 		}
 	}
@@ -244,13 +282,12 @@ class Imap{
     public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->verificarQuotaDeUso().
-		 '\n PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
-		 '\n DISPONIVEL: '.$this->verificarQuotaDisponivel().
-		 '\n TOTAL: '.$this->verificarQuotaTotal().'<br />'
+		 "\n".' PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
+		 "\n".' DISPONIVEL: '.$this->verificarQuotaDisponivel().
+		 "\n".'TOTAL: '.$this->verificarQuotaTotal().'<br />'
 		 );
     }
 	public function verificarQuotaPorPasta($mailbox){
          $this->quota=imap_get_quotaroot($this->stream,$mailbox);  
-		 
     }
 }
