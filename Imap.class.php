@@ -141,7 +141,7 @@ class Imap{
 
 
 	public function verificarTipoSeparador(){
-			$this->separador= imap_getmailboxes($this->stream,$this->mbox, "*");
+			$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
 			$this->separador= $this->separador[0]->delimiter;
 			return $this->separador;
 	 }
@@ -193,12 +193,17 @@ class Imap{
 	}
 	
 	public function migrarMensagensImap($origem,$pastas){
-        $origemMailbox=@imap_open($origem->mailbox.$pastas,$origem->usuario,$origem->senha);
-        $destinoMailbox=@imap_open($this->mailbox.$pastas,$this->usuario,$this->senha);
-
-         //echo "Pasta Origem:".$pastas."\n";
-        // echo "Pasta Destino:". $this->verificarPadraoMailbox($origem,$this->listarPastas($pastas))."\n";
-        //imap_close($origemMailbox); 
+		//Ajustes de pastas
+		$origemMailbox=@imap_open($origem->mbox.$pastas,$origem->usuario,$origem->senha,1);
+		
+		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
+		$destinoMailbox=@imap_open($this->mbox.$pastasDestino,$this->usuario,$this->senha,1);
+		
+	
+		echo "Origem:".$origemMailbox."\n";
+		echo "Destino:".$destinoMailbox."\n";
+        
+		
         }
 	
 	
