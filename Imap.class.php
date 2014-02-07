@@ -198,12 +198,8 @@ class Imap{
 		
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
 		$destinoMailbox=@imap_open($this->mbox.$pastasDestino,$this->usuario,$this->senha,1);
-		
-	
 		echo "Origem:".$origemMailbox."\n";
 		echo "Destino:".$destinoMailbox."\n";
-        
-		
         }
 	
 	
@@ -219,43 +215,47 @@ class Imap{
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
 	}
 	
-	public function verificarQuotaDeUso(){
-		$quotaDeUsoKB = ($this->quota["usage"]);
-		$quotaDeUsoMB = ($this->quota["usage"]*1024)/1048576;
-		$quotaDeUsoGB = ($this->quota["usage"]*1024)/1073741824; 
-         if($quotaDeUsoMB >= 1024){
-			$this->quotaEmUso = number_format($quotaDeUsoGB,2)." GB"; 
-		     return $this->quotaEmUso;
+	
+	public function ajustarMedida($gigaBytes,$megaBytes,$kiloBytes){
+		if($megaBytes >= 1024){
+			 $gigaBytes = number_format($gigaBytes,2)." GB"; 
+		     return $gigaBytes;
 		}else{
-		      if($quotaDeUsoKB >= 1024){
-                    $this->quotaEmUso = number_format($quotaDeUsoMB,2)." MB";
-                    return $this->quotaEmUso;
-				 
+		      if($kiloBytes >= 1024){
+                    $megaBytes = number_format($megaBytes,2)." MB";
+                    return $megaBytes;
 		      }else{
-                    $this->quotaEmUso = $quotaDeUsoKB." KB";
-                    return $this->quotaEmUso;
+                    return $kiloBytes." KB";
 		      }
 		}    
 	}
+	
+	public function verificarQuotaTotal(){
+		//Usar apenas para a Raiz (INBOX)
+		$quotaTotalKB =($this->quota["limit"]);
+		$quotaTotalMB =($this->quota["limit"])*1024/1048576;
+		$quotaTotalGB =($this->quota["limit"])*1024/1073741824;
+		$this->quotaTotal= $this->ajustarMedida($quotaTotalGB,$quotaTotalMB,$quotaTotalKB);
+		return $this->quotaTotal;
+	}
+	
+	public function verificarQuotaDeUso(){
+		$quotaDeUsoKB = ($this->quota["usage"]);
+		$quotaDeUsoMB = ($this->quota["usage"]*1024)/1048576;
+		$quotaDeUsoGB = ($this->quota["usage"]*1024)/1073741824;
+		$this->quotaEmUso= $this->ajustarMedida($quotaDeUsoGB,$quotaDeUsoMB,$quotaDeUsoKB);
+		return $this->quotaEmUso; 
+	}
+	
 	public function verificarQuotaDisponivel(){
 		//Usar apenas para a Raiz (INBOX)
 		$quotaDisponivelKB =($this->quota["limit"] - $this->quota["usage"]);
 		$quotaDisponivelMB =($this->quota["limit"] - $this->quota["usage"])*1024/1048576;
 		$quotaDisponivelGB =($this->quota["limit"] - $this->quota["usage"])*1024/1073741824;
-		  
-		if($quotaDisponivelMB >= 1024 ){
-			$this->quotaDisponivel=number_format($quotaDisponivelGB,2)." GB";
-            return $this->quotaDisponivel;
-		}else{
-		     if($quotaDisponivelKB >= 1024){
-                    $this->quotaDisponivel=number_format($quotaDisponivelMB,2)." MB";
-                    return $this->quotaDisponivel; 
-		      }else{
-                    $this->quotaDisponivel=$quotaDisponivelKB." KB";
-                    return $this->quotaDisponivel;
-		      }
-		}
+		$this->quotaDisponivel= $this->ajustarMedida($quotaDisponivelGB,$quotaDisponivelMB,$quotaDisponivelKB);
+		return $this->quotaDisponivel;
 	}
+	
 	public function verificarPorgentagemDeUso(){
 		//Usar apenas para a Raiz (INBOX)
 		$quotaDeUsoMB = $this->quota["usage"]*1024/1048576;
@@ -265,25 +265,6 @@ class Imap{
 		return  $quotaDeUso2." %";
 	}
 	
-	public function verificarQuotaTotal(){
-		//Usar apenas para a Raiz (INBOX)
-		$quotaTotalKB =($this->quota["limit"]);
-		$quotaTotalMB =($this->quota["limit"])*1024/1048576;
-		$quotaTotalGB =($this->quota["limit"])*1024/1073741824;
-		  
-		if($quotaTotalMB >= 1024 ){
-			   $this->quotaTotal=number_format($quotaTotalGB,2)." GB";
-			   return $this->quotaTotal;
-		}else{
-			 if($quotaTotalKB >= 1024){
-				$this->quotaTotal= number_format($quotaTotalMB,2)." MB";
-				return $this->quotaTotal;
-			  }else{
-				$this->quotaTotal= $quotaTotalKB." KB";
-				return $this->quotaTotal;
-			  }
-		}
-	}
     public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->verificarQuotaDeUso().
@@ -292,7 +273,10 @@ class Imap{
 		 "\n".'TOTAL: '.$this->verificarQuotaTotal().'<br />'
 		 );
     }
-	public function verificarQuotaPorPasta($mailbox){
-         $this->quota=imap_get_quotaroot($this->stream,$mailbox);  
+
+	public function verificarQuotaPorPasta($pastas){
+         	$stream=@imap_open($this->mbox.$pastas,$this->usuario,$this->senha,1);
+			$info = imap_mailboxmsginfo($stream);
+			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho: $info->Size \n";
     }
 }
