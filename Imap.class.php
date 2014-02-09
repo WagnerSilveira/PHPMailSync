@@ -28,19 +28,18 @@ class Imap{
 		$this->$atributo = $valor;
 	}
 	
-	/*
-	Função Conectar Original
+	//	Função Conectar Original
 	
 	public function conectar(){
        if($this->tipo=="imap"){
 	          if($this->ssl==1){
                     $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-                    $this->stream =@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
+                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,NULL,0);
 					return $this->stream;
                     
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
+                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,NULL,0);
 					return $this->stream;
                }
           } //fecha if IMAP
@@ -58,42 +57,7 @@ class Imap{
          }//fecha if POP3 
 	
 	}
-	*/
-	
-	// Função conectar com argumento conectar(pasta)
-	
-	public function conectar(){
-	            $numargs = func_num_args();
-	            if($numargs==1){
-	                 $this->pastas=func_get_args();
-	                 $this->pastas=$this->pastas[0];
-	            }
-                 if($this->tipo=="imap"){
-	                    if($this->ssl==1){
-                              $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-                              $this->stream = @imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
-					        return $this->stream;
-                         }else{
-                              $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-                              $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,1);
-					          return $this->stream;
-                         }
-                    } //fecha if IMAP
-                   if($this->tipo=="pop3"){
-                         if($this->ssl==1){
-			             
-                              $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-                              $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
-				              return $this->stream;
-                         }else{
-                              $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-                              $this->stream= @imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
-				              return $this->stream;
-                         }
-                   }//fecha if POP3 
-	     
-	}
-	
+
 	public function receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->servidor=$servidor;
 	      $this->usuario=$usuario;
@@ -141,21 +105,21 @@ class Imap{
 
 
 	public function verificarTipoSeparador(){
-			$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
-			$this->separador= $this->separador[0]->delimiter;
-			return $this->separador;
+		$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
+		$this->separador= $this->separador[0]->delimiter;
+		return $this->separador;
 	 }
 	 
 	// Funçao para ser utilizada no host de destino
 	public function verificarPadraoMailbox($origem,$pastas){
-			/*Esta função necessita das funções abaixo
-				$this->listarMailBox();
-				$this->verificarTipoSeparador();
-			
-			*/
-		$delimitador= $origem->verificarTipoSeparador();
-	    $pastas_novoarray=explode($delimitador,$pastas);
-        $pastas=implode($this->separador,$pastas_novoarray);
+		/*Esta função necessita das funções abaixo
+			$this->listarMailBox();
+			$this->verificarTipoSeparador();
+		
+		*/
+          $delimitador= $origem->verificarTipoSeparador();
+          $pastas_novoarray=explode($delimitador,$pastas);
+          $pastas=implode($this->separador,$pastas_novoarray);
           
 	     if(@preg_grep("/INBOX".$this->separador."/",$this->pastas)){
 					$pastas="INBOX".$this->separador.$pastas; 
@@ -194,8 +158,7 @@ class Imap{
 	
 	public function migrarMensagensImap($origem,$pastas){
 		//Ajustes de pastas
-		$origemMailbox=@imap_open($origem->mbox.$pastas,$origem->usuario,$origem->senha,1);
-		
+		$origemMailbox=imap_open($origem->mbox.$pastas,$origem->usuario,$origem->senha,1);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
 		$destinoMailbox=@imap_open($this->mbox.$pastasDestino,$this->usuario,$this->senha,1);
 		echo "Origem:".$origemMailbox."\n";
@@ -216,7 +179,11 @@ class Imap{
 	}
 	
 	
-	public function ajustarMedida($gigaBytes,$megaBytes,$kiloBytes){
+	public function ajustarMedida($medidaEmKB){
+	     $kiloBytes =($medidaEmKB);
+		$megaBytes =($medidaEmKB)*1024/1048576;
+		$gigaBytes =($medidaEmKB)*1024/1073741824;
+		
 		if($megaBytes >= 1024){
 			 $gigaBytes = number_format($gigaBytes,2)." GB"; 
 		     return $gigaBytes;
@@ -232,44 +199,33 @@ class Imap{
 	
 	public function verificarQuotaTotal(){
 		//Usar apenas para a Raiz (INBOX)
-		$quotaTotalKB =($this->quota["limit"]);
-		$quotaTotalMB =($this->quota["limit"])*1024/1048576;
-		$quotaTotalGB =($this->quota["limit"])*1024/1073741824;
-		$this->quotaTotal= $this->ajustarMedida($quotaTotalGB,$quotaTotalMB,$quotaTotalKB);
+		$this->quotaTotal= $this->ajustarMedida($this->quota["limit"]);
 		return $this->quotaTotal;
 	}
 	
 	public function verificarQuotaDeUso(){
-		$quotaDeUsoKB = ($this->quota["usage"]);
-		$quotaDeUsoMB = ($this->quota["usage"]*1024)/1048576;
-		$quotaDeUsoGB = ($this->quota["usage"]*1024)/1073741824;
-		$this->quotaEmUso= $this->ajustarMedida($quotaDeUsoGB,$quotaDeUsoMB,$quotaDeUsoKB);
+		$this->quotaEmUso= $this->ajustarMedida($this->quota["usage"]);
 		return $this->quotaEmUso; 
 	}
 	
 	public function verificarQuotaDisponivel(){
 		//Usar apenas para a Raiz (INBOX)
-		$quotaDisponivelKB =($this->quota["limit"] - $this->quota["usage"]);
-		$quotaDisponivelMB =($this->quota["limit"] - $this->quota["usage"])*1024/1048576;
-		$quotaDisponivelGB =($this->quota["limit"] - $this->quota["usage"])*1024/1073741824;
-		$this->quotaDisponivel= $this->ajustarMedida($quotaDisponivelGB,$quotaDisponivelMB,$quotaDisponivelKB);
+		$this->quotaDisponivel= $this->ajustarMedida($this->quota["limit"] - $this->quota["usage"]);
 		return $this->quotaDisponivel;
 	}
 	
 	public function verificarPorgentagemDeUso(){
-		//Usar apenas para a Raiz (INBOX)
-		$quotaDeUsoMB = $this->quota["usage"]*1024/1048576;
-		$limite=$this->quota["limit"]*1024/1048576;
-		$quotaDeUso1=$quotaDeUsoMB*100;
-		$quotaDeUso2= round ($quotaDeUso1/$limite,0);
-		return  $quotaDeUso2." %";
+			//Usar apenas para a Raiz (INBOX)
+		$porcentagemDeUso= ($this->quota["usage"]*100)/$this->quota["limit"];
+		$porcentagemDeUso= round ($porcentagemDeUso,0);
+		return $porcentagemDeUso." %";
 	}
 	
     public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->verificarQuotaDeUso().
-		 "\n".' PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
-		 "\n".' DISPONIVEL: '.$this->verificarQuotaDisponivel().
+		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
+		 "\n".'DISPONIVEL: '.$this->verificarQuotaDisponivel().
 		 "\n".'TOTAL: '.$this->verificarQuotaTotal().'<br />'
 		 );
     }
