@@ -34,12 +34,13 @@ class Imap{
        if($this->tipo=="imap"){
 	          if($this->ssl==1){
                     $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,NULL,0);
+                    $this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,0);
 					return $this->stream;
                     
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario, $this->senha,NULL,0);
+                    $this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,0);
+					
 					return $this->stream;
                }
           } //fecha if IMAP
@@ -47,11 +48,11 @@ class Imap{
                if($this->ssl==1){
 			   
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
+                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,1);
 				    return $this->stream;
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox.$this->pastas,$this->usuario,$this->senha,1);
+                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,1);
 				    return $this->stream;
                }
          }//fecha if POP3 
@@ -115,7 +116,6 @@ class Imap{
 		/*Esta função necessita das funções abaixo
 			$this->listarMailBox();
 			$this->verificarTipoSeparador();
-		
 		*/
           $delimitador= $origem->verificarTipoSeparador();
           $pastas_novoarray=explode($delimitador,$pastas);
@@ -141,60 +141,63 @@ class Imap{
 				}
 		}
 	}
-	public function criarMailboxInexistentes($pastas){
-	      if(! array_search($this->mbox.$pastas,$this->pastas)){
+	public function criarMailboxInexistentes($origem,$pastas){
+		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
+		if(! array_search($this->mbox.$pastas,$this->pastas)){
 			$pastas =imap_utf7_decode($pastas);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-				return " Pasta: $pastas  criada com sucesso !"."\n";
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
-					return "Falha na inscrição da pasta: $pastas"."\n";
+					//return "Falha na inscrição da pasta: $pastas"."\n";
+					return 1;
 				}
+				//return " Pasta: $pastas  criada com sucesso !"."\n";
+				return 0;
 			}else{
-				$erros = imap_errors();
-				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
+				//$erros = imap_errors();
+				//return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
+				return 2;
 			}
 		}
 	}
 	
 	public function migrarMensagensImap($origem,$pastas){
 		//Ajustes de pastas
-		$origemMailbox=imap_open($origem->mbox.$pastas,$origem->usuario,$origem->senha,1);
+		//imap_reopen($origem->stream,$origem->mbox.$pastas);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
-		$destinoMailbox=@imap_open($this->mbox.$pastasDestino,$this->usuario,$this->senha,1);
-		echo "Origem:".$origemMailbox."\n";
-		echo "Destino:".$destinoMailbox."\n";
+		//echo "Origem:".$origem->stream .'Pasta:'.$origem->mbox.$pastas."\n";
+			if($reopen = imap_reopen($this->stream,$this->mbox.$pastasDestino)){
+				return $this->mbox.$pastasDestino."\n";
+				//echo "Destino:".$this->stream .'Pasta:'.$this->mbox.$pastasDestino."\n";
+			}
         }
 	
 	
-	public function listarTotalMensagensPorMailbox($pasta){
-		$mailbox= imap_open($pasta,$this->usuario,$this->senha,1);
-		$cabecalho = imap_headers($mailbox);
-		$total = count($cabecalho);
-		imap_close($mailbox);
-		return "Total de mensagens: $total mensagens";
+	public function listarTotalMensagensPorMailbox($pastas){
+		imap_reopen($this->stream,$this->mbox.$pastas);
+		$totalMsgs = imap_num_msg($this->stream);
+		return "Total de mensagens: $totalMsgs mensagens";
 		
 	}
-	public function receberInfoQuotaTotal(){
-		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
-	}
-	
-	
 	public function ajustarMedida($medidaEmKB){
-	     $kiloBytes =($medidaEmKB);
-		$megaBytes =($medidaEmKB)*1024/1048576;
-		$gigaBytes =($medidaEmKB)*1024/1073741824;
+	    $kiloBytes =$medidaEmKB;
+		$megaBytes =$medidaEmKB*1024/1048576;
+		$gigaBytes =$medidaEmKB*1024/1073741824;
 		
 		if($megaBytes >= 1024){
-			 $gigaBytes = number_format($gigaBytes,2)." GB"; 
-		     return $gigaBytes;
+				$gigaBytes = number_format($gigaBytes,2)." GB"; 
+				return $gigaBytes;
 		}else{
-		      if($kiloBytes >= 1024){
-                    $megaBytes = number_format($megaBytes,2)." MB";
-                    return $megaBytes;
-		      }else{
-                    return $kiloBytes." KB";
-		      }
+			if($kiloBytes >= 1024){
+				$megaBytes = number_format($megaBytes,2)." MB";
+				return $megaBytes;
+			}else{
+				return $kiloBytes." KB";
+			}
 		}    
+	}
+	
+	public function receberInfoQuotaTotal(){
+		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
 	}
 	
 	public function verificarQuotaTotal(){
@@ -231,8 +234,9 @@ class Imap{
     }
 
 	public function verificarQuotaPorPasta($pastas){
-         	$stream=@imap_open($this->mbox.$pastas,$this->usuario,$this->senha,1);
-			$info = imap_mailboxmsginfo($stream);
-			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho: $info->Size \n";
+		
+			imap_reopen($this->stream,$this->mbox.$pastas);
+			$info = imap_mailboxmsginfo($this->stream);
+			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho:".$info->Size."\n";
     }
 }
