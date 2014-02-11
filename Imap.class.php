@@ -28,7 +28,7 @@ class Imap{
 		$this->$atributo = $valor;
 	}
 	
-	//	FunÃ§Ã£o Conectar Original
+	//	Função Conectar Original
 	
 	public function conectar(){
        if($this->tipo=="imap"){
@@ -111,9 +111,9 @@ class Imap{
 		return $this->separador;
 	 }
 	 
-	// FunÃ§ao para ser utilizada no host de destino
+	// Funçao para ser utilizada no host de destino
 	public function verificarPadraoMailbox($origem,$pastas){
-		/*Esta funÃ§Ã£o necessita das funÃ§Ãµes abaixo
+		/*Esta função necessita das funções abaixo
 			$this->listarMailBox();
 			$this->verificarTipoSeparador();
 		*/
@@ -137,8 +137,8 @@ class Imap{
 				if(preg_match("/Inbox\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/Inbox\\".$this->separador."/","",$pastas);
 						return $pastas;
-					
 				}
+				return $pastas;
 		}
 	}
 	public function criarMailboxInexistentes($origem,$pastas){
@@ -147,29 +147,55 @@ class Imap{
 			$pastas =imap_utf7_decode($pastas);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
-					//return "Falha na inscriÃ§Ã£o da pasta: $pastas"."\n";
-					return 1;
+					return "Falha na inscrição da pasta: $pastas"."\n";
+					//return 1;
 				}
-				//return " Pasta: $pastas  criada com sucesso !"."\n";
-				return 0;
+				return " Pasta: $pastas  criada com sucesso !"."\n";
+				//return 0;
 			}else{
-				//$erros = imap_errors();
-				//return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
-				return 2;
+				$erros = imap_errors();
+				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
+				//return 2;
 			}
+		}
+	}
+	
+	public function listarMensagensPorPastas($origem,$pastas){
+		imap_reopen($this->stream,$this->mbox.$pastas);
+		$cabecalhos = imap_headers($this->stream);
+		foreach($cabecalhos as $mensagens){
+			echo $mensagens."\n";
+		
 		}
 	}
 	
 	public function migrarMensagensImap($origem,$pastas){
 		//Ajustes de pastas
-		//imap_reopen($origem->stream,$origem->mbox.$pastas);
+		imap_reopen($origem->stream,$origem->mbox.$pastas);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
-		//echo "Origem:".$origem->stream .'Pasta:'.$origem->mbox.$pastas."\n";
-			if($reopen = imap_reopen($this->stream,$this->mbox.$pastasDestino)){
-				return $this->mbox.$pastasDestino."\n";
-				//echo "Destino:".$this->stream .'Pasta:'.$this->mbox.$pastasDestino."\n";
+		imap_reopen($this->stream,$this->mbox.$pastas);
+		$mensagens = imap_headers($this->stream);
+		foreach($mensagens as $mensagem){
+			echo $mensagem."\n";
+		
+		}
+    }
+	
+	public function verificarMensagensDuplicadas($origem,$numMensagem){
+		$mensagem = $numMensagem+1;
+		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$mensagem);
+        $MessageIdDestino=@imap_fetch_overview($this->stream,$mensagem);
+		
+		 if(isset($MessageIdDestino[0]->message_id)){
+			if($MessageIdOrigem[0]->message_id == $MessageIdDestino[0]->message_id){
+				return false;
 			}
-        }
+			
+		 }
+		 
+		 $MessageIdDestino[0]->message_id==false ){
+		 if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
+	}
 	
 	
 	public function listarTotalMensagensPorMailbox($pastas){
