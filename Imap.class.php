@@ -145,19 +145,27 @@ class Imap{
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
 		if(! array_search($this->mbox.$pastas,$this->pastas)){
 			$pastas =imap_utf7_decode($pastas);
+			imap_reopen($this->stream,$this->mbox);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
 					return "Falha na inscrição da pasta: $pastas"."\n";
-					//return 1;
 				}
 				return " Pasta: $pastas  criada com sucesso !"."\n";
-				//return 0;
 			}else{
 				$erros = imap_errors();
 				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
-				//return 2;
 			}
 		}
+	}
+	
+	public function verificarMensagensDuplicadas($origem,$numMensagem){
+		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$numMensagem+1);
+          $MessageIdDestino=@imap_fetch_overview($this->stream,$numMensagem+1);
+          if($MessageIdOrigem[0]->message_id == true && $MessageIdDestino[0]->message_id==false ){
+               if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
+                    return true;
+               }
+          }
 	}
 	
 	public function listarMensagensPorPastas($origem,$pastas){
@@ -173,33 +181,19 @@ class Imap{
 		//Ajustes de pastas
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
-		imap_reopen($this->stream,$this->mbox.$pastas);
-		$mensagens = imap_headers($this->stream);
-		var_dump($mensagens);
-		//foreach($mensagens as $mensagem){
-		//	echo $mensagem."\n";
-		
-		//}
+		imap_reopen($this->stream,$this->mbox.$pastasDestino);
+		// Lista cabecalho das mensagens 
+		$mensagens = imap_headers($origem->stream);
+          if($mensagens){
+               foreach($mensagens as $numMensagem=>$mensagem){
+                    if($this->verificarMensagensDuplicadas($origem,$numMensagem)){
+                         echo "Pasta Origem: $pastas Pasta Destino: $pastasDestino \n";
+                         echo "MIGRANDO -->$mensagem  \n";
+                    }
+               }
+          }
     	}
-	
-	/*
-	public function verificarMensagensDuplicadas($origem,$numMensagem){
-		$mensagem = $numMensagem+1;
-		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$mensagem);
-        $MessageIdDestino=@imap_fetch_overview($this->stream,$mensagem);
-		
-		 if(isset($MessageIdDestino[0]->message_id)){
-			if($MessageIdOrigem[0]->message_id == $MessageIdDestino[0]->message_id){
-				return false;
-			}
-			
-		 }
-		 
-		 $MessageIdDestino[0]->message_id==false ){
-		 if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
-	}
-	
-	*/
+
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
