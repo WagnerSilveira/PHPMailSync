@@ -175,12 +175,14 @@ class Imap{
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$mensagens = imap_headers($this->stream);
-		foreach($mensagens as $mensagem){
-			echo $mensagem."\n";
+		var_dump($mensagens);
+		//foreach($mensagens as $mensagem){
+		//	echo $mensagem."\n";
 		
-		}
-    }
+		//}
+    	}
 	
+	/*
 	public function verificarMensagensDuplicadas($origem,$numMensagem){
 		$mensagem = $numMensagem+1;
 		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$mensagem);
@@ -197,7 +199,7 @@ class Imap{
 		 if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
 	}
 	
-	
+	*/
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
@@ -266,3 +268,5 @@ class Imap{
 			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho:".$info->Size."\n";
     }
 }
+
+?>
