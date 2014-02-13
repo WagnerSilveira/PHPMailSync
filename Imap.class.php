@@ -30,7 +30,7 @@ class Imap{
 		$this->$atributo = $valor;
 	}
 	
-	//	Função Conectar Original
+	//	Funï¿½ï¿½o Conectar Original
 	
 	public function conectar(){
        if($this->tipo=="imap"){
@@ -113,9 +113,9 @@ class Imap{
 		return $this->separador;
 	 }
 	 
-	// Funçao para ser utilizada no host de destino
+	// Funï¿½ao para ser utilizada no host de destino
 	public function verificarPadraoMailbox($origem,$pastas){
-		/*Esta função necessita das funções abaixo
+		/*Esta funï¿½ï¿½o necessita das funï¿½ï¿½es abaixo
 			$this->listarMailBox();
 			$this->verificarTipoSeparador();
 		*/
@@ -150,7 +150,7 @@ class Imap{
 			imap_reopen($this->stream,$this->mbox);
 			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
-					return "Falha na inscrição da pasta: $pastas"."\n";
+					return "Falha na inscriï¿½ï¿½o da pasta: $pastas"."\n";
 				}
 				return " Pasta: $pastas  criada com sucesso !"."\n";
 			}else{
@@ -204,7 +204,7 @@ class Imap{
                          //Verifica flags da mensagem
                          if ($msgVisualisada != "U") {
                               if (! imap_setflag_full($this->stream,$numMensagem+1,'\\SEEN')) {
-                                   echo "Não pode setar a Flag  \\SEEN ";
+                                   echo "Nï¿½o pode setar a Flag  \\SEEN ";
                               }
                          }
                           //echo "done\n";
@@ -214,6 +214,8 @@ class Imap{
                          }
                          
                     }//fecha If $this->verificarMensagensDuplicadas
+                    imap_gc($origem->stream, IMAP_GC_ELT);
+        	    imap_gc($this->stream, IMAP_GC_ELT);
                }
           }
     	}
