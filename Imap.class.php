@@ -9,6 +9,8 @@ class Imap{
 	private $quota;
 	private $quotaEmUso;
 	private $quotaDisponivel;
+	private $contatorMsgMigradas;
+	private $contatorMsgExistentes;
 	private $quotaTotal;
 	private $pastas;
 	private $separador;
@@ -185,11 +187,33 @@ class Imap{
 		// Lista cabecalho das mensagens 
 		$mensagens = imap_headers($origem->stream);
           if($mensagens){
-               foreach($mensagens as $numMensagem=>$mensagem){
+               foreach($mensagens as $numMensagem=>$mensagem){                    
                     if($this->verificarMensagensDuplicadas($origem,$numMensagem)){
-                         echo "Pasta Origem: $pastas Pasta Destino: $pastasDestino \n";
-                         echo "MIGRANDO -->$mensagem  \n";
-                    }
+                    
+                         //Funcional
+                         $header = imap_headerinfo($origem->stream, $numMensagem+1);
+                         $msgVisualisada = $header->Unseen;                             
+                         //echo "is_unseen = $is_unseen";
+                         // $is_recent = $header->Recent;
+                         // echo "is_recent = $is_recent";
+
+
+                         $cabecalho = imap_fetchheader($origem->stream, $numMensagem+1);
+                         $corpo = imap_body($origem->stream, $numMensagem+1);
+                         if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
+                         //Verifica flags da mensagem
+                         if ($msgVisualisada != "U") {
+                              if (! imap_setflag_full($this->stream,$numMensagem+1,'\\SEEN')) {
+                                   echo "Não pode setar a Flag  \\SEEN ";
+                              }
+                         }
+                          //echo "done\n";
+
+                         } else {
+                          //echo "NOT done\n";
+                         }
+                         
+                    }//fecha If $this->verificarMensagensDuplicadas
                }
           }
     	}
