@@ -30,7 +30,7 @@ class Imap{
 		$this->$atributo = $valor;
 	}
 	
-	//	Fun��o Conectar Original
+	//	Funcao Conectar Original
 	
 	public function conectar(){
        if($this->tipo=="imap"){
@@ -77,18 +77,18 @@ class Imap{
 	
 	public function testarConexao(){
 	   if($this->ssl==1){
-			   $socket=@fsockopen("ssl://".$this->servidor,$this->porta);
+	 	$socket=@fsockopen("ssl://".$this->servidor,$this->porta);
                if($socket){
-					fclose($socket);
+		     fclose($socket);
                      return true;
                }else{
                     return false;
                }
 	   }else{
-				 $socket=@fsockopen($this->servidor,$this->porta);
-				if($socket){
-					fclose($socket);
-                   return true;
+	 	$socket=@fsockopen($this->servidor,$this->porta);
+		if($socket){
+			fclose($socket);
+                   	return true;
                }else{
                    return false;
                }
@@ -113,9 +113,9 @@ class Imap{
 		return $this->separador;
 	 }
 	 
-	// Fun�ao para ser utilizada no host de destino
+	// Funcao para ser utilizada no host de destino
 	public function verificarPadraoMailbox($origem,$pastas){
-		/*Esta fun��o necessita das fun��es abaixo
+		/*Esta funcao necessita das funcoes abaixo
 			$this->listarMailBox();
 			$this->verificarTipoSeparador();
 		*/
@@ -160,15 +160,52 @@ class Imap{
 		}
 	}
 	
+	/* Original
 	public function verificarMensagensDuplicadas($origem,$numMensagem){
 		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$numMensagem+1);
-          $MessageIdDestino=@imap_fetch_overview($this->stream,$numMensagem+1);
-          if($MessageIdOrigem[0]->message_id == true && $MessageIdDestino[0]->message_id==false ){
+        $MessageIdDestino=@imap_fetch_overview($this->stream,$numMensagem+1);
+		if($MessageIdOrigem[0]->message_id == true && $MessageIdDestino[0]->message_id==false ){
                if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
                     return true;
                }
           }
 	}
+	 */
+	 
+	public function verificarMensagensDuplicadas($origem,$pastas){
+		imap_reopen($origem->stream,$origem->mbox.$pastas);
+		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
+		imap_reopen($this->stream,$this->mbox.$pastasDestino);
+		
+		$totalOrigem = count(imap_headers($origem->stream));
+		$totalDestino = count(imap_headers($this->stream));
+		
+		$MessageIdOrigem=@imap_fetch_overview($origem->stream,"1:$totalOrigem");
+        	$MessageIdDestino=@imap_fetch_overview($this->stream,"1:$totalDestino");
+		
+		$mensagensOrigem=null;
+		$mensagensDestino=null;
+		$naoexistentes=null;
+		
+		if($MessageIdDestino){
+			foreach($MessageIdDestino as $key => $mensagem){
+				$mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
+			}
+		}
+		if($mensagensDestino){
+			foreach($MessageIdOrigem as $key => $mensagem){
+				if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
+					$naoexistentes[] = $MessageIdOrigem[$key]->uid;
+				}
+			}
+		}else{
+			foreach($MessageIdOrigem as $key => $mensagem){
+				$naoexistentes[] = $MessageIdOrigem[$key]->uid;
+			}
+		}
+		
+		return $naoexistentes;
+	}	
 	
 	public function listarMensagensPorPastas($origem,$pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
@@ -179,6 +216,8 @@ class Imap{
 		}
 	}
 	
+	/*	Original 
+	
 	public function migrarMensagensImap($origem,$pastas){
 		//Ajustes de pastas
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
@@ -186,9 +225,13 @@ class Imap{
 		imap_reopen($this->stream,$this->mbox.$pastasDestino);
 		// Lista cabecalho das mensagens 
 		$mensagens = imap_headers($origem->stream);
-          if($mensagens){
-               foreach($mensagens as $numMensagem=>$mensagem){                    
-                    if($this->verificarMensagensDuplicadas($origem,$numMensagem)){
+		$total = count($mensagens);
+		
+		 
+	if($mensagens){
+               foreach($mensagens as $numMensagem=>$mensagem){      
+			   
+                     if($this->verificarMensagensDuplicadas($origem,$numMensagem)){
                     
                          //Funcional
                          $header = imap_headerinfo($origem->stream, $numMensagem+1);
@@ -204,22 +247,43 @@ class Imap{
                          //Verifica flags da mensagem
                          if ($msgVisualisada != "U") {
                               if (! imap_setflag_full($this->stream,$numMensagem+1,'\\SEEN')) {
-                                   echo "N�o pode setar a Flag  \\SEEN ";
+                                   echo "Nao pode setar a Flag  \\SEEN ";
                               }
-                         }
-                          //echo "done\n";
+                        }
+							echo "done\n";
 
                          } else {
                           //echo "NOT done\n";
                          }
                          
-                    }//fecha If $this->verificarMensagensDuplicadas
+                    } //fecha If $this->verificarMensagensDuplicadas
                     imap_gc($origem->stream, IMAP_GC_ELT);
         	    imap_gc($this->stream, IMAP_GC_ELT);
                }
-          }
-    	}
+          } 
+    } */
+	
+	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
+		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastasOrigem);
+		$msgNum= imap_msgno($origem->stream,$uid);				
+		$header = imap_headerinfo($origem->stream,$msgNum);
+		$msgVisualisada = $header->Unseen;                             
+		$cabecalho = imap_fetchheader($origem->stream,$uid,FT_UID);
+		$corpo = imap_body($origem->stream,$uid,FT_UID | FT_PEEK);
+		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
+		//Verifica flags da mensagem
+				if ($msgVisualisada != "U") {
+					  if (! imap_setflag_full($this->stream,$msgNum,'\\SEEN')) {
+						   echo "Nao pode setar a Flag  \\SEEN ";
+					  }
+				}
+				echo " Migrando mensagem UID= $uid \n";
 
+		} else {
+		//echo "NOT done\n";
+		}
+	
+	}
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
