@@ -77,18 +77,18 @@ class Imap{
 	
 	public function testarConexao(){
 	   if($this->ssl==1){
-	 	$socket=@fsockopen("ssl://".$this->servidor,$this->porta);
+			   $socket=@fsockopen("ssl://".$this->servidor,$this->porta);
                if($socket){
-		     fclose($socket);
+					fclose($socket);
                      return true;
                }else{
                     return false;
                }
 	   }else{
-	 	$socket=@fsockopen($this->servidor,$this->porta);
-		if($socket){
-			fclose($socket);
-                   	return true;
+				 $socket=@fsockopen($this->servidor,$this->porta);
+				if($socket){
+					fclose($socket);
+                   return true;
                }else{
                    return false;
                }
@@ -159,18 +159,6 @@ class Imap{
 			}
 		}
 	}
-	
-	/* Original
-	public function verificarMensagensDuplicadas($origem,$numMensagem){
-		$MessageIdOrigem=@imap_fetch_overview($origem->stream,$numMensagem+1);
-        $MessageIdDestino=@imap_fetch_overview($this->stream,$numMensagem+1);
-		if($MessageIdOrigem[0]->message_id == true && $MessageIdDestino[0]->message_id==false ){
-               if($MessageIdOrigem[0]->message_id <> $MessageIdDestino[0]->message_id){
-                    return true;
-               }
-          }
-	}
-	 */
 	 
 	public function verificarMensagensDuplicadas($origem,$pastas){
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
@@ -181,7 +169,7 @@ class Imap{
 		$totalDestino = count(imap_headers($this->stream));
 		
 		$MessageIdOrigem=@imap_fetch_overview($origem->stream,"1:$totalOrigem");
-        	$MessageIdDestino=@imap_fetch_overview($this->stream,"1:$totalDestino");
+        $MessageIdDestino=@imap_fetch_overview($this->stream,"1:$totalDestino");
 		
 		$mensagensOrigem=null;
 		$mensagensDestino=null;
@@ -215,54 +203,7 @@ class Imap{
 		
 		}
 	}
-	
-	/*	Original 
-	
-	public function migrarMensagensImap($origem,$pastas){
-		//Ajustes de pastas
-		imap_reopen($origem->stream,$origem->mbox.$pastas);
-		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
-		imap_reopen($this->stream,$this->mbox.$pastasDestino);
-		// Lista cabecalho das mensagens 
-		$mensagens = imap_headers($origem->stream);
-		$total = count($mensagens);
-		
-		 
-	if($mensagens){
-               foreach($mensagens as $numMensagem=>$mensagem){      
-			   
-                     if($this->verificarMensagensDuplicadas($origem,$numMensagem)){
-                    
-                         //Funcional
-                         $header = imap_headerinfo($origem->stream, $numMensagem+1);
-                         $msgVisualisada = $header->Unseen;                             
-                         //echo "is_unseen = $is_unseen";
-                         // $is_recent = $header->Recent;
-                         // echo "is_recent = $is_recent";
 
-
-                         $cabecalho = imap_fetchheader($origem->stream, $numMensagem+1);
-                         $corpo = imap_body($origem->stream, $numMensagem+1);
-                         if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
-                         //Verifica flags da mensagem
-                         if ($msgVisualisada != "U") {
-                              if (! imap_setflag_full($this->stream,$numMensagem+1,'\\SEEN')) {
-                                   echo "Nao pode setar a Flag  \\SEEN ";
-                              }
-                        }
-							echo "done\n";
-
-                         } else {
-                          //echo "NOT done\n";
-                         }
-                         
-                    } //fecha If $this->verificarMensagensDuplicadas
-                    imap_gc($origem->stream, IMAP_GC_ELT);
-        	    imap_gc($this->stream, IMAP_GC_ELT);
-               }
-          } 
-    } */
-	
 	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastasOrigem);
 		$msgNum= imap_msgno($origem->stream,$uid);				
@@ -277,7 +218,7 @@ class Imap{
 						   echo "Nao pode setar a Flag  \\SEEN ";
 					  }
 				}
-				echo " Migrando mensagem UID= $uid \n";
+				echo " Migrando mensagem UID= $uid  - Quantidade de memoria utilizada = ".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 
 		} else {
 		//echo "NOT done\n";
@@ -307,6 +248,11 @@ class Imap{
 			}
 		}    
 	}
+	public function ajustarMedidaBytes($medidaEmBytes){
+		$medidaEmKB= $medidaEmBytes/1024;
+		return $this->ajustarMedida($medidaEmKB);
+	}
+	
 	
 	public function receberInfoQuotaTotal(){
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
