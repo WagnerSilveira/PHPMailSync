@@ -145,54 +145,72 @@ class Imap{
 	}
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
-		if(! array_search($this->mbox.$pastas,$this->pastas)){
+		if(!array_search($this->mbox.$pastas,$this->pastas)){
 			$pastas =imap_utf7_decode($pastas);
-			imap_reopen($this->stream,$this->mbox);
-			if(@imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
+			if(imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
-					return "Falha na inscri��o da pasta: $pastas"."\n";
+					return "Falha na inscricao da pasta: $pastas"."\n";
 				}
-				return " Pasta: $pastas  criada com sucesso !"."\n";
+				return "Pasta: $pastas  criada com sucesso !"."\n";
 			}else{
 				$erros = imap_errors();
 				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
 			}
 		}
+		return "Pasta já existe: $pastas  \n";
 	}
+	
+	
+	
 	 
 	public function verificarMensagensDuplicadas($origem,$pastas){
+	     //Função verifica mensagem pela Message-ID
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
 		imap_reopen($this->stream,$this->mbox.$pastasDestino);
 		
-		$totalOrigem = count(imap_headers($origem->stream));
-		$totalDestino = count(imap_headers($this->stream));
-		
-		$MessageIdOrigem=@imap_fetch_overview($origem->stream,"1:$totalOrigem");
-        $MessageIdDestino=@imap_fetch_overview($this->stream,"1:$totalDestino");
+		$totalOrigem = imap_check($origem->stream);
+		$totalDestino = imap_check($this->stream);
 		
 		$mensagensOrigem=null;
 		$mensagensDestino=null;
 		$naoexistentes=null;
 		
-		if($MessageIdDestino){
-			foreach($MessageIdDestino as $key => $mensagem){
-				$mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
-			}
+		if($totalOrigem->Nmsgs > 0){
+		     $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
 		}
-		if($mensagensDestino){
-			foreach($MessageIdOrigem as $key => $mensagem){
-				if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
-					$naoexistentes[] = $MessageIdOrigem[$key]->uid;
-				}
-			}
+		
+		if($totalDestino->Nmsgs > 0){
+		           $MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
+		           
+                    if(isset($MessageIdDestino)){
+                         foreach($MessageIdDestino as $key => $mensagem){
+                              if(isset($MessageIdDestino[$key]->message_id)){
+                                   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
+                              }
+                         }
+                    }
+                    if($mensagensDestino){
+                         if(isset($MessageIdOrigem)){
+                              foreach($MessageIdOrigem as $key => $mensagem){
+                                if(isset($MessageIdOrigem[$key]->message_id)){
+                                   if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
+                                         $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+                                   }
+                                }
+                              }
+                         }
+		     }
 		}else{
-			foreach($MessageIdOrigem as $key => $mensagem){
-				$naoexistentes[] = $MessageIdOrigem[$key]->uid;
+		     if(isset($MessageIdOrigem)){
+			     foreach($MessageIdOrigem as $key => $mensagem){
+				     $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+			     }
 			}
 		}
 		
 		return $naoexistentes;
+		
 	}	
 	
 	public function listarMensagensPorPastas($origem,$pastas){
@@ -205,12 +223,20 @@ class Imap{
 	}
 
 	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
+	
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastasOrigem);
 		$msgNum= imap_msgno($origem->stream,$uid);				
 		$header = imap_headerinfo($origem->stream,$msgNum);
-		$msgVisualisada = $header->Unseen;                             
+		$msgVisualisada = $header->Unseen;        
+		                     
 		$cabecalho = imap_fetchheader($origem->stream,$uid,FT_UID);
 		$corpo = imap_body($origem->stream,$uid,FT_UID | FT_PEEK);
+		
+		usleep(150000);/*  ==> Essa funcao serve para diminuir o load da máquina
+		
+		      Sem o Usleep, o uso da CPU chega a 25%, com ele no máximo ate 3%
+	            150000 micro_segundos igual a 0,15 segundos de espera 
+	     */
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
 		//Verifica flags da mensagem
 				if ($msgVisualisada != "U") {
@@ -218,10 +244,11 @@ class Imap{
 						   echo "Nao pode setar a Flag  \\SEEN ";
 					  }
 				}
-				echo " Migrando mensagem UID= $uid  - Quantidade de memoria utilizada = ".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
+				return " Migrando mensagem UID= $uid  - Quantidade de memoria utilizada = ".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 
 		} else {
-		//echo "NOT done\n";
+		       $erros = imap_errors();
+			  return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
 		}
 	
 	}

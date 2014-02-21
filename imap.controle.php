@@ -2,8 +2,9 @@
 include('Imap.class.php');
 error_reporting();
 
-$origem= new Imap(string host, string usuario ,string senha,string tipo, bool ssl);
-$destino=  new Imap(string host, string usuario ,string senha,string tipo, bool ssl);
+//$origem= new Imap(string host, string usuario ,string senha,string tipo, bool ssl);
+//$destino=  new Imap(string host, string usuario ,string senha,string tipo, bool ssl);
+
 
 if(!$origem->testarConexao()){
 	echo "Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco:<strong> $origem->servidor </strong> na porta <strong> $origem->porta </strong>";
@@ -27,21 +28,25 @@ if(!$destino->conectar()){
 $destino->listarMailBox();
 $destino->verificarTipoSeparador();
 
-echo '<pre>';
+echo "<pre> \n";
+ foreach($origem->listarMailBox() as $mailbox){
+	$pastasOrigem=$origem->listarPastas($mailbox);
+    echo $destino->criarMailboxInexistentes($origem,$pastasOrigem);
+
+}
 
  foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-	echo $destino->criarMailboxInexistentes($origem,$pastasOrigem);
-	//$origem->listarMensagensPorPastas($pastasOrigem);
-	//echo $origem->verificarPadraoMailbox($origem,$pastasOrigem);
-	echo "$pastasOrigem \n";
+	
+     echo "Verificando conteudo na pasta $pastasOrigem \n";
 	if($destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		foreach ($destino->verificarMensagensDuplicadas($origem,$pastasOrigem) as $uid){
-			echo $destino->migrarMensagensImap($origem,$pastasOrigem,$uid).;
+	         echo $destino->migrarMensagensImap($origem,$pastasOrigem,$uid);
 		}
 	}
-//echo $origem->listarTotalMensagensPorMailbox($pastas)."\n";
+
 } 
+ 
 
 echo '</pre>';
 ?>  
