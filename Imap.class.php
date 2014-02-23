@@ -77,7 +77,7 @@ class Imap{
 	
 	public function testarConexao(){
 	   if($this->ssl==1){
-			   $socket=@fsockopen("ssl://".$this->servidor,$this->porta);
+			   $socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
                if($socket){
 					fclose($socket);
                      return true;
@@ -85,7 +85,7 @@ class Imap{
                     return false;
                }
 	   }else{
-				 $socket=@fsockopen($this->servidor,$this->porta);
+				 $socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
 				if($socket){
 					fclose($socket);
                    return true;
@@ -94,19 +94,20 @@ class Imap{
                }
         }
 	}
+	//Em Desenvolvimento
+	public function reconectar($origem){
 	
-	 public function listarMailBox(){
+	}
+	
+	public function listarMailBox(){
 	    $this->pastas= imap_list($this->stream,$this->mbox, "*");
-		return $this->pastas;
-		
+		return $this->pastas;	
 	} 
 	public function listarPastas($mailbox){
 		$pos = strpos($mailbox,"}");
 		$pastas = substr($mailbox,$pos+1);
 		return $pastas;
 	}
-
-
 	public function verificarTipoSeparador(){
 		$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
 		$this->separador= $this->separador[0]->delimiter;
@@ -160,29 +161,32 @@ class Imap{
 		return "Pasta já existe: $pastas  \n";
 	}
 	
+	public function limparImapCache($origem){
+		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
+		imap_gc($this->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
+	}
 	
-	
-	 
 	public function verificarMensagensDuplicadas($origem,$pastas){
 	     //Função verifica mensagem pela Message-ID
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastas);
 		imap_reopen($this->stream,$this->mbox.$pastasDestino);
 		
-		$totalOrigem = imap_check($origem->stream);
-		$totalDestino = imap_check($this->stream);
+		$totalOrigem = imap_num_msg($origem->stream);
+		$totalDestino = imap_num_msg($this->stream);
 		
 		$mensagensOrigem=null;
 		$mensagensDestino=null;
 		$naoexistentes=null;
 		
-		if($totalOrigem->Nmsgs > 0){
-		     $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
+		if($totalOrigem > 0){
+		     //$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
+			 $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
 		}
 		
-		if($totalDestino->Nmsgs > 0){
-		           $MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
-		           
+		if($totalDestino > 0){
+		           //$MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
+		           $MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
                     if(isset($MessageIdDestino)){
                          foreach($MessageIdDestino as $key => $mensagem){
                               if(isset($MessageIdDestino[$key]->message_id)){
@@ -208,9 +212,7 @@ class Imap{
 			     }
 			}
 		}
-		
 		return $naoexistentes;
-		
 	}	
 	
 	public function listarMensagensPorPastas($origem,$pastas){
@@ -218,7 +220,6 @@ class Imap{
 		$cabecalhos = imap_headers($this->stream);
 		foreach($cabecalhos as $mensagens){
 			echo $mensagens."\n";
-		
 		}
 	}
 
@@ -240,13 +241,13 @@ class Imap{
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
 		//Verifica flags da mensagem
 				if ($msgVisualisada != "U") {
-					  if (! imap_setflag_full($this->stream,$msgNum,'\\SEEN')) {
+					  if (! imap_setflag_full($this->stream,$msgNum,' \\SEEN')) {
 						   echo "Nao pode setar a Flag  \\SEEN ";
 					  }
 				}
 				return " Migrando mensagem UID= $uid  - Quantidade de memoria utilizada = ".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 
-		} else {
+		}else {
 		       $erros = imap_errors();
 			  return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
 		}
@@ -255,7 +256,7 @@ class Imap{
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
-		return "Total de mensagens: $totalMsgs mensagens";
+		return $totalMsgs;
 		
 	}
 	public function ajustarMedida($medidaEmKB){
@@ -279,7 +280,6 @@ class Imap{
 		$medidaEmKB= $medidaEmBytes/1024;
 		return $this->ajustarMedida($medidaEmKB);
 	}
-	
 	
 	public function receberInfoQuotaTotal(){
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
@@ -317,13 +317,14 @@ class Imap{
 		 "\n".'TOTAL: '.$this->verificarQuotaTotal().'<br />'
 		 );
     }
-
+	/*Funcao Depreciada
+	Leva um tempo muito longo para sua execução
 	public function verificarQuotaPorPasta($pastas){
-		
 			imap_reopen($this->stream,$this->mbox.$pastas);
 			$info = imap_mailboxmsginfo($this->stream);
 			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho:".$info->Size."\n";
     }
+	*/
 }
 
 ?>
