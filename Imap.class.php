@@ -9,8 +9,6 @@ class Imap{
 	private $quota;
 	private $quotaEmUso;
 	private $quotaDisponivel;
-	private $contatorMsgMigradas;
-	private $contatorMsgExistentes;
 	private $quotaTotal;
 	private $pastas;
 	private $separador;
@@ -33,28 +31,27 @@ class Imap{
 	//	Funcao Conectar Original
 	
 	public function conectar(){
-       if($this->tipo=="imap"){
-	          if($this->ssl==1){
-                    $this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,0);
+		if($this->tipo=="imap"){
+					if($this->ssl==1){
+					$this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
+					$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
 					return $this->stream;
-                    
-               }else{
-                    $this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,0);
 					
+			}else{
+					$this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
+					$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
 					return $this->stream;
-               }
-          } //fecha if IMAP
+			   }
+		} //fecha if IMAP
          if($this->tipo=="pop3"){
                if($this->ssl==1){
 			   
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,1);
+                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
 				    return $this->stream;
                }else{
                     $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,1);
+                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
 				    return $this->stream;
                }
          }//fecha if POP3 
@@ -73,30 +70,35 @@ class Imap{
 	       if($this->tipo=="pop3"){
 				$this->porta=($this->ssl==1)?'995':'110';
 	      }  
-     }
+	}
 	
 	public function testarConexao(){
 	   if($this->ssl==1){
-			   $socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
-               if($socket){
-					fclose($socket);
-                     return true;
-               }else{
-                    return false;
-               }
+			$socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
+			if($socket){
+				fclose($socket);
+				return true;
+            }else{
+				return false;
+            }
 	   }else{
-				 $socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
-				if($socket){
-					fclose($socket);
-                   return true;
-               }else{
-                   return false;
-               }
+			$socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
+			if($socket){
+				fclose($socket);
+				return true;
+            }else{
+				return false;
+            }
         }
 	}
-	//Em Desenvolvimento
-	public function reconectar($origem){
-	
+	//
+	public function keepAlive(){
+		if (!imap_ping($this->stream)) {
+			if(!$this->conectar()){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public function listarMailBox(){
@@ -113,6 +115,11 @@ class Imap{
 		$this->separador= $this->separador[0]->delimiter;
 		return $this->separador;
 	 }
+	 	
+	public function limparImapCache($origem){
+		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
+		imap_gc($this->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
+	}
 	 
 	// Funcao para ser utilizada no host de destino
 	public function verificarPadraoMailbox($origem,$pastas){
@@ -158,12 +165,7 @@ class Imap{
 				return "Falha na criacao da pasta: $pastas --> ".$erros[0]."\n";
 			}
 		}
-		return "Pasta já existe: $pastas  \n";
-	}
-	
-	public function limparImapCache($origem){
-		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
-		imap_gc($this->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
+		return "Pasta ja existe: $pastas  \n";
 	}
 	
 	public function verificarMensagensDuplicadas($origem,$pastas){
@@ -181,37 +183,37 @@ class Imap{
 		
 		if($totalOrigem > 0){
 		     //$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
-			 $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
+			$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
 		}
-		
 		if($totalDestino > 0){
-		           //$MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
-		           $MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
-                    if(isset($MessageIdDestino)){
-                         foreach($MessageIdDestino as $key => $mensagem){
-                              if(isset($MessageIdDestino[$key]->message_id)){
-                                   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
-                              }
-                         }
-                    }
-                    if($mensagensDestino){
-                         if(isset($MessageIdOrigem)){
-                              foreach($MessageIdOrigem as $key => $mensagem){
-                                if(isset($MessageIdOrigem[$key]->message_id)){
-                                   if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
-                                         $naoexistentes[] = $MessageIdOrigem[$key]->uid;
-                                   }
-                                }
-                              }
-                         }
-		     }
+		   //$MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
+		   	$MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
+			if(isset($MessageIdDestino)){
+				 foreach($MessageIdDestino as $key => $mensagem){
+					if(isset($MessageIdDestino[$key]->message_id)){
+					   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
+					}//Fecha if(isset($MessageIdDestino[$key]
+				}//Fecha foreach
+			}//Fecha if(isset($MessageIdDestino)
+			if($mensagensDestino){
+				 if(isset($MessageIdOrigem)){
+					  foreach($MessageIdOrigem as $key => $mensagem){
+						if(isset($MessageIdOrigem[$key]->message_id)){
+							if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
+								 $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+							}
+						}//Fecha if(isset($MessageIdOrigem[$key] ...
+					}//Fecha foreach
+				}//Fecha if(isset($MessageIdOrigem)
+			}//Fecha if($mensagensDestino)
 		}else{
 		     if(isset($MessageIdOrigem)){
 			     foreach($MessageIdOrigem as $key => $mensagem){
 				     $naoexistentes[] = $MessageIdOrigem[$key]->uid;
-			     }
-			}
-		}
+			    }//Fecha Foreach
+			}//Fecha if(isset...
+		}//Fecha else
+		
 		return $naoexistentes;
 	}	
 	
@@ -222,43 +224,63 @@ class Imap{
 			echo $mensagens."\n";
 		}
 	}
-
-	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
 	
+	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
+		imap_reopen($origem->stream,$origem->mbox.$pastasOrigem);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastasOrigem);
-		$msgNum= imap_msgno($origem->stream,$uid);				
-		$header = imap_headerinfo($origem->stream,$msgNum);
-		$msgVisualisada = $header->Unseen;        
-		                     
+		imap_reopen($this->stream,$this->mbox.$pastasDestino);
+		
+		$status=imap_status($this->stream,$this->mbox.$pastasDestino,SA_UIDNEXT);
+		$uidDestino= $status->uidnext;
+		
 		$cabecalho = imap_fetchheader($origem->stream,$uid,FT_UID);
 		$corpo = imap_body($origem->stream,$uid,FT_UID | FT_PEEK);
 		
 		usleep(150000);/*  ==> Essa funcao serve para diminuir o load da máquina
-		
-		      Sem o Usleep, o uso da CPU chega a 25%, com ele no máximo ate 3%
-	            150000 micro_segundos igual a 0,15 segundos de espera 
-	     */
+		Sem o Usleep, o uso da CPU chega a 25%, com ele no máximo ate 3%
+	     	150000 micro_segundos igual a 0,15 segundos de espera 
+			*/
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
-		//Verifica flags da mensagem
-				if ($msgVisualisada != "U") {
-					  if (! imap_setflag_full($this->stream,$msgNum,' \\SEEN')) {
-						   echo "Nao pode setar a Flag  \\SEEN ";
-					  }
-				}
-				return " Migrando mensagem UID= $uid  - Quantidade de memoria utilizada = ".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
-
-		}else {
+				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
+				return "Origem [$pastasOrigem] Msg_UID=$uid >>> Destino [$pastasDestino]  --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." --UID Destino:".$uidDestino."\n";
+		}else{
 		       $erros = imap_errors();
 			  return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
 		}
-	
 	}
+	
+	public function setarFlags($origem,$uid,$pastasDestino,$uidDestino){
+		//Setar Flags no destino
+		$msgNum= imap_msgno($origem->stream,$uid);	
+		$cabecalhoMsg = imap_headerinfo($origem->stream,$msgNum);	
+		$flags=null; 
+		if($cabecalhoMsg->Unseen != 'U'){
+			$flags=' \\Seen';
+		}
+		 if($cabecalhoMsg->Flagged == 'F'){
+			$flags.=' \\Flagged';
+		}
+		if($cabecalhoMsg->Answered == 'A'){
+			$flags.=' \\Answered';
+		}
+		if($cabecalhoMsg->Deleted == 'D'){
+			$flags.=' \\Deleted';
+		}
+		if($cabecalhoMsg->Draft == 'X'){
+			$flags.=' \\Draft';
+		}
+		if(!imap_setflag_full($this->stream,$uidDestino,$flags,ST_UID)){
+			echo 'Nao foi possivel setar as flags nesta mensagem'."\n";
+		}
+	}
+	
+	
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
 		return $totalMsgs;
-		
 	}
+	
 	public function ajustarMedida($medidaEmKB){
 	    $kiloBytes =$medidaEmKB;
 		$megaBytes =$medidaEmKB*1024/1048576;
@@ -276,6 +298,7 @@ class Imap{
 			}
 		}    
 	}
+	
 	public function ajustarMedidaBytes($medidaEmBytes){
 		$medidaEmKB= $medidaEmBytes/1024;
 		return $this->ajustarMedida($medidaEmKB);
@@ -287,18 +310,18 @@ class Imap{
 	
 	public function verificarQuotaTotal(){
 		//Usar apenas para a Raiz (INBOX)
-		$this->quotaTotal= $this->ajustarMedida($this->quota["limit"]);
+		$this->quotaTotal= $this->quota["limit"];
 		return $this->quotaTotal;
 	}
 	
 	public function verificarQuotaDeUso(){
-		$this->quotaEmUso= $this->ajustarMedida($this->quota["usage"]);
+		$this->quotaEmUso= $this->quota["usage"];
 		return $this->quotaEmUso; 
 	}
 	
 	public function verificarQuotaDisponivel(){
 		//Usar apenas para a Raiz (INBOX)
-		$this->quotaDisponivel= $this->ajustarMedida($this->quota["limit"] - $this->quota["usage"]);
+		$this->quotaDisponivel= $this->quota["limit"] - $this->quota["usage"];
 		return $this->quotaDisponivel;
 	}
 	
@@ -311,20 +334,12 @@ class Imap{
 	
     public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
-		 return ('USO: '.$this->verificarQuotaDeUso().
+		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
 		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
-		 "\n".'DISPONIVEL: '.$this->verificarQuotaDisponivel().
-		 "\n".'TOTAL: '.$this->verificarQuotaTotal().'<br />'
+		 "\n".'DISPONIVEL: '.$this->ajustarMedida($this->verificarQuotaDisponivel()).
+		 "\n".'TOTAL: '.$this->ajustarMedida($this->verificarQuotaTotal())."\n"
 		 );
     }
-	/*Funcao Depreciada
-	Leva um tempo muito longo para sua execução
-	public function verificarQuotaPorPasta($pastas){
-			imap_reopen($this->stream,$this->mbox.$pastas);
-			$info = imap_mailboxmsginfo($this->stream);
-			return "Pasta: $pastas  -- Total de mensagens: $info->Nmsgs  Tamanho:".$info->Size."\n";
-    }
-	*/
 }
 
 ?>
