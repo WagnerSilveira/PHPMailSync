@@ -54,7 +54,7 @@ echo "\n";
 echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 
 if(!isset($argumentos['ignorarespaco'])||(!isset($_GET['ignorarespaco'])){
-	if($origem->quotaEmUso < $destino->quotaDisponivel){
+	if($origem->quotaEmUso > $destino->quotaDisponivel){
 		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida($destino->quotaDisponivel-$origem->quotaEmUso)." de espaco a conta $destino->usuario \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 		echo "\n";
@@ -70,7 +70,7 @@ echo "\n";
 echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-    fwrite($stream, $destino->criarMailboxInexistentes($origem,$pastasOrigem));
+	fwrite($stream, $destino->criarMailboxInexistentes($origem,$pastasOrigem));
 	$destino->limparImapCache($origem);
 }
 
