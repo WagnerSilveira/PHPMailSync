@@ -32,29 +32,29 @@ class Imap{
 	
 	public function conectar(){
 		if($this->tipo=="imap"){
-					if($this->ssl==1){
-					$this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-					$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
-					return $this->stream;
-					
+			if($this->ssl==1){
+				$this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
+				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
+				return $this->stream;
+			
 			}else{
-					$this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-					$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
-					return $this->stream;
-			   }
+				$this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
+				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
+				return $this->stream;
+			}
 		} //fecha if IMAP
-         if($this->tipo=="pop3"){
-               if($this->ssl==1){
-			   
-                    $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
-				    return $this->stream;
-               }else{
-                    $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
-				    return $this->stream;
-               }
-         }//fecha if POP3 
+         	if($this->tipo=="pop3"){
+	               if($this->ssl==1){
+				   
+	                    $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
+	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
+					    return $this->stream;
+	               }else{
+	                    $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
+	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
+					    return $this->stream;
+	               }
+        	 }//fecha if POP3 
 	
 	}
 
@@ -70,26 +70,26 @@ class Imap{
 	       if($this->tipo=="pop3"){
 				$this->porta=($this->ssl==1)?'995':'110';
 	      }  
-	}
+     	}
 	
 	public function testarConexao(){
-	   if($this->ssl==1){
+		if($this->ssl==1){
 			$socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
 			if($socket){
 				fclose($socket);
 				return true;
-            }else{
+            		}else{
 				return false;
-            }
-	   }else{
+            		}
+	   	}else{
 			$socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
 			if($socket){
 				fclose($socket);
 				return true;
-            }else{
+            		}else{
 				return false;
-            }
-        }
+            		}
+        	}
 	}
 	//
 	public function keepAlive(){
@@ -151,6 +151,7 @@ class Imap{
 				return $pastas;
 		}
 	}
+	
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
 		if(!array_search($this->mbox.$pastas,$this->pastas)){
@@ -183,11 +184,11 @@ class Imap{
 		
 		if($totalOrigem > 0){
 		     //$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
-			$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
+			 $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
 		}
 		if($totalDestino > 0){
 		   //$MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
-		   	$MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
+		   $MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
 			if(isset($MessageIdDestino)){
 				 foreach($MessageIdDestino as $key => $mensagem){
 					if(isset($MessageIdDestino[$key]->message_id)){
@@ -238,11 +239,11 @@ class Imap{
 		
 		usleep(150000);/*  ==> Essa funcao serve para diminuir o load da máquina
 		Sem o Usleep, o uso da CPU chega a 25%, com ele no máximo ate 3%
-	     	150000 micro_segundos igual a 0,15 segundos de espera 
+	     150000 micro_segundos igual a 0,15 segundos de espera 
 			*/
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
-				return "Origem [$pastasOrigem] Msg_UID=$uid >>> Destino [$pastasDestino]  --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." --UID Destino:".$uidDestino."\n";
+				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 		}else{
 		       $erros = imap_errors();
 			  return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
@@ -257,7 +258,7 @@ class Imap{
 		if($cabecalhoMsg->Unseen != 'U'){
 			$flags=' \\Seen';
 		}
-		 if($cabecalhoMsg->Flagged == 'F'){
+        	if($cabecalhoMsg->Flagged == 'F'){
 			$flags.=' \\Flagged';
 		}
 		if($cabecalhoMsg->Answered == 'A'){
@@ -332,7 +333,7 @@ class Imap{
 		return $porcentagemDeUso." %";
 	}
 	
-    public function verificarInfoQuota(){
+    	public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
 		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
@@ -341,5 +342,4 @@ class Imap{
 		 );
     }
 }
-
 ?>
