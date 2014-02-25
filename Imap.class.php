@@ -34,12 +34,12 @@ class Imap{
 		if($this->tipo=="imap"){
 			if($this->ssl==1){
 				$this->mbox='{'."$this->servidor:$this->porta/imap/ssl/novalidate-cert".'}';
-				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
+				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,2);
 				return $this->stream;
 			
 			}else{
 				$this->mbox='{'."$this->servidor:$this->porta/imap/novalidate-cert".'}';
-				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,3);
+				$this->stream=@imap_open($this->mbox,$this->usuario, $this->senha,NULL,2);
 				return $this->stream;
 			}
 		} //fecha if IMAP
@@ -47,11 +47,11 @@ class Imap{
 	               if($this->ssl==1){
 				   
 	                    $this->mbox='{'."$this->servidor:$this->porta/pop3/ssl/novalidate-cert".'}';
-	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
+	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,2);
 					    return $this->stream;
 	               }else{
 	                    $this->mbox='{'."$this->servidor:$this->porta/pop3/novalidate-cert".'}';
-	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,3);
+	                    $this->stream=@imap_open($this->mbox,$this->usuario,$this->senha,2);
 					    return $this->stream;
 	               }
         	 }//fecha if POP3 
