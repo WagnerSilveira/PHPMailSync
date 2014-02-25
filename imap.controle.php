@@ -53,7 +53,7 @@ echo $destino->verificarInfoQuota();
 echo "\n";
 echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 
-if(!isset($argumentos['ignorarespaco']){
+if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
 		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida($destino->quotaDisponivel-$origem->quotaEmUso)." de espaco a conta $destino->usuario \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
