@@ -1,5 +1,4 @@
 <?php
-
 include('Imap.class.php');
 if (php_sapi_name()=='cli'){
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
@@ -107,6 +106,8 @@ foreach($origem->listarMailBox() as $mailbox){
 }
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
 echo "\n";
+echo "                 ESTATISTICAS                  \n";
+echo $destino->gerarEstatisticas();
 echo "Migracao Concluida em ".date('d/m/Y -- H:i:s')."\n";
 echo "\n";
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";

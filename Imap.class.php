@@ -1,20 +1,33 @@
 <?php
 class Imap{
+	//Conexao 
+	private $stream;
 	private $servidor;
 	private $porta;
 	private $ssl;
 	private $usuario;
 	private $senha;
 	private $mbox;
-	private $quota;
-	private $quotaEmUso;
-	private $quotaDisponivel;
-	private $quotaTotal;
+	// Gerencia da Mailbox
 	private $pastas;
 	private $separador;
 	private $prefixo;
 	private $tipo;
-	private $stream;
+	//Estatisticas de consumo
+	private $quota;
+	private $quotaEmUso;
+	private $quotaDisponivel;
+	private $quotaTotal;	
+	//Estatisticas de migracao
+	private $numeroDePastasCriadas=0;
+	private $totalDeMensagensNaOrigem=0;
+	private $totalDeMensagensExistentes=0;
+	private $totalDeMensagensNaoExistentes=0;
+	private $totalDeMensagensMigradas=0;
+	private $totalDeMensagensNaoMigradas=0;
+	private $tamanhoTotalDeMensagensMigradas=0;
+	
+	
 	
 	public function __construct($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl);
@@ -160,6 +173,10 @@ class Imap{
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
 					return "Falha na inscricao da pasta: $pastas"."\n";
 				}
+				//Gera Estatistica -> numeroDePastasCriadas
+					$this->numeroDePastasCriadas++;
+				//Fecha Estatistica
+				
 				return "Pasta: $pastas  criada com sucesso !"."\n";
 			}else{
 				$erros = imap_errors();
@@ -177,6 +194,11 @@ class Imap{
 		
 		$totalOrigem = imap_num_msg($origem->stream);
 		$totalDestino = imap_num_msg($this->stream);
+		//Gera Estatistica -> totalMensagensOrigem
+		
+		$this->totalDeMensagensNaOrigem=$this->totalDeMensagensNaOrigem+$totalOrigem;
+		
+		//Fecha Estatistica
 		
 		$mensagensOrigem=null;
 		$mensagensDestino=null;
@@ -184,11 +206,14 @@ class Imap{
 		
 		if($totalOrigem > 0){
 		     //$MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:{$totalOrigem->Nmsgs}");
+
 			 $MessageIdOrigem= @imap_fetch_overview($origem->stream,"1:*");
 		}
 		if($totalDestino > 0){
 		   //$MessageIdDestino= @imap_fetch_overview($this->stream,"1:{$totalDestino->Nmsgs}");
 		   $MessageIdDestino= @imap_fetch_overview($this->stream,"1:*");
+	   
+		   
 			if(isset($MessageIdDestino)){
 				 foreach($MessageIdDestino as $key => $mensagem){
 					if(isset($MessageIdDestino[$key]->message_id)){
@@ -201,7 +226,15 @@ class Imap{
 					  foreach($MessageIdOrigem as $key => $mensagem){
 						if(isset($MessageIdOrigem[$key]->message_id)){
 							if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
-								 $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+								//Gera Estatistica - tamanhoTotalDeMensagensMigradas
+								$this->tamanhoTotalDeMensagensMigradas=$this->tamanhoTotalDeMensagensMigradas + $MessageIdOrigem[$key]->size;
+								//Gera Estatistica 
+								$naoexistentes[] = $MessageIdOrigem[$key]->uid;
+								 
+							}else{
+								//Gera Estatistica -> totalMensagensOrigem 		
+									$this->totalDeMensagensExistentes++;
+								//Fecha Estatistica
 							}
 						}//Fecha if(isset($MessageIdOrigem[$key] ...
 					}//Fecha foreach
@@ -210,11 +243,19 @@ class Imap{
 		}else{
 		     if(isset($MessageIdOrigem)){
 			     foreach($MessageIdOrigem as $key => $mensagem){
+					//Gera Estatistica - tamanhoTotalDeMensagensMigradas
+						$this->tamanhoTotalDeMensagensMigradas=$MessageIdOrigem[$key]->size + $this->tamanhoTotalDeMensagensMigradas;
+					//Gera Estatistica 
+					
 				     $naoexistentes[] = $MessageIdOrigem[$key]->uid;
 			    }//Fecha Foreach
 			}//Fecha if(isset...
 		}//Fecha else
+		//Gera Estatistica
 		
+			$this->totalDeMensagensNaoExistentes=$this->totalDeMensagensNaoExistentes + (count($naoexistentes));
+			
+		//Fecha Estatistica
 		return $naoexistentes;
 	}	
 	
@@ -242,11 +283,18 @@ class Imap{
 	     150000 micro_segundos igual a 0,15 segundos de espera 
 			*/
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
+				//Gera Estatistica -> totalDeMensagensMigradas
+				 $this->totalDeMensagensMigradas++;
+				//Fecha Estatistica
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
 				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 		}else{
-		       $erros = imap_errors();
-			  return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
+			//Gera Estatistica -> totalDeMensagensNaoMigradas
+				$this->totalDeMensagensNaoMigradas++;
+			//Fecha Estatistica
+		     $erros = imap_errors();
+			 return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
+			  
 		}
 	}
 	
@@ -258,7 +306,7 @@ class Imap{
 		if($cabecalhoMsg->Unseen != 'U'){
 			$flags=' \\Seen';
 		}
-        	if($cabecalhoMsg->Flagged == 'F'){
+        if($cabecalhoMsg->Flagged == 'F'){
 			$flags.=' \\Flagged';
 		}
 		if($cabecalhoMsg->Answered == 'A'){
@@ -271,7 +319,7 @@ class Imap{
 			$flags.=' \\Draft';
 		}
 		if(!imap_setflag_full($this->stream,$uidDestino,$flags,ST_UID)){
-			echo 'Nao foi possivel setar as flags nesta mensagem'."\n";
+			echo 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
 		}
 	}
 	
@@ -327,13 +375,13 @@ class Imap{
 	}
 	
 	public function verificarPorgentagemDeUso(){
-			//Usar apenas para a Raiz (INBOX)
+		//Usar apenas para a Raiz (INBOX)
 		$porcentagemDeUso= ($this->quota["usage"]*100)/$this->quota["limit"];
 		$porcentagemDeUso= round ($porcentagemDeUso,0);
 		return $porcentagemDeUso." %";
 	}
 	
-    	public function verificarInfoQuota(){
+    public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
 		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
@@ -341,5 +389,17 @@ class Imap{
 		 "\n".'TOTAL: '.$this->ajustarMedida($this->verificarQuotaTotal())."\n"
 		 );
     }
+	
+	public function gerarEstatisticas(){
+		return ('Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
+		'Total de mensagens na origem: '.$this->totalDeMensagensNaOrigem."\n".
+		'Total de mensagens nao migradas, ja existentes na conta de destino: '.$this->totalDeMensagensExistentes."\n".
+		'Total de nao existentes na conta de destino: '.$this->totalDeMensagensNaoExistentes."\n".
+		'Mensagens migradas com sucesso: '.$this->totalDeMensagensMigradas."\n".
+		'Mensagens nao migradas(Erro): '.$this->totalDeMensagensNaoMigradas."\n".
+		'Tamanho total de mensagens migradas: '.$this->ajustarMedidaBytes($this->tamanhoTotalDeMensagensMigradas)."\n");
+	}
+	
+	
 }
 ?>
