@@ -54,7 +54,7 @@ echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
-		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida($destino->quotaDisponivel-$origem->quotaEmUso)." de espaco a conta $destino->usuario \n";
+		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida( $destino->quotaDisponivel - $origem->quotaEmUso)." de espaco a conta $destino->usuario \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 		echo "\n";
 		exit;
@@ -106,7 +106,7 @@ foreach($origem->listarMailBox() as $mailbox){
 }
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
 echo "\n";
-echo " ESTATISTICAS\n";
+echo "ESTATISTICAS\n";
 echo $destino->gerarEstatisticas();
 echo " Migracao Concluida em ".date('d/m/Y -- H:i:s')."\n";
 echo "\n";
