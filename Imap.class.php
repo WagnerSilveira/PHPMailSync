@@ -24,6 +24,7 @@ class Imap{
 	private $totalDeMensagensExistentes=0;
 	private $totalDeMensagensNaoExistentes=0;
 	private $totalDeMensagensMigradas=0;
+	private $totalDeMensagensSemCabecalho=0;
 	private $totalDeMensagensNaoMigradas=0;
 	private $tamanhoTotalDeMensagensMigradas=0;
 	
@@ -293,7 +294,8 @@ class Imap{
 				 foreach($MessageIdDestino as $key => $mensagem){
 					if(isset($MessageIdDestino[$key]->message_id)){
 					   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
-					}//Fecha if(isset($MessageIdDestino[$key]
+					}
+					//Fecha if(isset($MessageIdDestino[$key]
 				}//Fecha foreach
 			}//Fecha if(isset($MessageIdDestino)
 			if($mensagensDestino){
@@ -311,7 +313,12 @@ class Imap{
 									$this->totalDeMensagensExistentes++;
 								//Fecha Estatistica
 							}
-						}//Fecha if(isset($MessageIdOrigem[$key] ...
+						}else{
+						     //Gera Estatistica ->totalDeMensagensSemCabecalho
+						     $this->totalDeMensagensSemCabecalho++;
+						     //Fecha  Estatistica 
+						}
+						
 					}//Fecha foreach
 				}//Fecha if(isset($MessageIdOrigem)
 			}//Fecha if($mensagensDestino)
@@ -472,6 +479,7 @@ class Imap{
 		'Total de nao existentes na conta de destino: '.$this->totalDeMensagensNaoExistentes."\n".
 		'Mensagens migradas com sucesso: '.$this->totalDeMensagensMigradas."\n".
 		'Mensagens nao migradas(Erro): '.$this->totalDeMensagensNaoMigradas."\n".
+		'Mensagens na origem sem Message-ID: '.$this->totalDeMensagensSemCabecalho."\n".
 		'Tamanho total de mensagens migradas: '.$this->ajustarMedidaBytes($this->tamanhoTotalDeMensagensMigradas)."\n");
 	}
 	
