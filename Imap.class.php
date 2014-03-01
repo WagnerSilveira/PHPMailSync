@@ -118,16 +118,86 @@ class Imap{
 	    $this->pastas= imap_list($this->stream,$this->mbox, "*");
 		return $this->pastas;	
 	} 
+	
 	public function listarPastas($mailbox){
 		$pos = strpos($mailbox,"}");
 		$pastas = substr($mailbox,$pos+1);
 		return $pastas;
 	}
+	
+	public function verificarPrefixo(){
+		if($this->tipo=="imap"){
+           	    if($this->ssl==1){
+                         $socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
+                        if($socket){
+                              $retorno=null;
+                              $retorno.=fread($socket,1024);
+                              fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
+                              $retorno=strstr($retorno,"A681 ",true);
+                              $retorno.=fread($socket,1024);
+                              $retorno=strstr($retorno,"A681 ",true);
+                              fwrite($socket,"A683 NAMESPACE\r\n");
+                              $retorno.=fread($socket,1024);
+                              $retorno=strstr($retorno,'* NAMESPACE ',false);
+                              $retorno=str_replace('* NAMESPACE ','',$retorno);
+                              $retorno=str_replace('((','',$retorno);
+                              $retorno=str_replace('))','',$retorno);
+                              $retorno=str_replace('"','',$retorno);
+                              $retorno=strstr($retorno,"A683 ",true);
+                              $retorno=explode(' ',$retorno);
+                              fclose($socket);
+                              
+                              if($retorno[0]){
+                                   $this->prefixo=$retorno[0];
+                                   return $this->prefixo; 
+                              }else{
+                                   $retorno='';
+                                   $this->prefixo=$retorno;
+                                   return $this->prefixo;
+                              } 
+                         }
+                }else{
+                    $socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
+                        if($socket){
+                              $retorno=null;
+                              $retorno.=fread($socket,1024);
+                              fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
+                              $retorno=strstr($retorno,"A681 ",true);
+                              $retorno.=fread($socket,1024);
+                              $retorno=strstr($retorno,"A681 ",true);
+                              fwrite($socket,"A683 NAMESPACE\r\n");
+                              $retorno.=fread($socket,1024);
+                              $retorno=strstr($retorno,'* NAMESPACE ',false);
+                              $retorno=str_replace('* NAMESPACE ','',$retorno);
+                              $retorno=str_replace('((','',$retorno);
+                              $retorno=str_replace('))','',$retorno);
+                              $retorno=str_replace('"','',$retorno);
+                              $retorno=strstr($retorno,"A683 ",true);
+                              $retorno=explode(' ',$retorno);
+                               if($retorno[0]){
+                                   $this->prefixo=$retorno[0];
+                                   return $this->prefixo; 
+                              }else{
+                                   $retorno='';
+                                   $this->prefixo=$retorno;
+                                   return $this->prefixo;
+                              }  
+                        }
+                }
+
+		 }else{
+		    $retorno='';
+               $this->prefixo=$retorno;
+               return $this->prefixo;
+		 }
+
+	}	
+
 	public function verificarTipoSeparador(){
 		$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
 		$this->separador= $this->separador[0]->delimiter;
 		return $this->separador;
-	 }
+	}
 	 	
 	public function limparImapCache($origem){
 		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
@@ -155,13 +225,18 @@ class Imap{
 		 }else{
 				if(preg_match("/INBOX\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/INBOX\\".$this->separador."/","",$pastas);
+						
 						return $pastas;
 				}
 				if(preg_match("/Inbox\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/Inbox\\".$this->separador."/","",$pastas);
 						return $pastas;
 				}
-				return $pastas;
+				if($origem->prefixo != $this->prefixo){
+				     return $this->prefixo.$pastas;
+				}else{
+				     return $pastas;
+				}
 		}
 	}
 	

@@ -47,14 +47,19 @@ echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 echo "\n";
 echo "--- Informacoes da conta - ORIGEM --- \n";
 echo $origem->verificarInfoQuota();
+echo "Prefixo: ".$origem->verificarPrefixo()."\n";
+echo "Separador: ".$origem->verificarTipoSeparador()."\n";
 echo "--- Informacoes da conta - DESTINO --- \n";
 echo $destino->verificarInfoQuota();
+echo "Prefixo: ".$destino->verificarPrefixo()."\n";
+echo "Separador: ".$destino->verificarTipoSeparador()."\n";
 echo "\n";
 echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
-		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida( $destino->quotaDisponivel - $origem->quotaEmUso)." de espaco a conta $destino->usuario \n";
+	     $espaco= $origem->quotaEmUso - $destino->quotaDisponivel;
+		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida($espaco)." de espaco a conta $destino->usuario \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 		echo "\n";
 		exit;
