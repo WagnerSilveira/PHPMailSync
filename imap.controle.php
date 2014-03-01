@@ -1,4 +1,5 @@
 <?php
+if(extension_loaded('imap'){
 include('Imap.class.php');
 if (php_sapi_name()=='cli'){
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
@@ -116,5 +117,7 @@ echo $destino->gerarEstatisticas()."\n";
 echo "Migracao Concluida em ".date('d/m/Y -- H:i:s')."\n";
 echo "\n";
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
-
+}else{
+  echo "A extensão Imap para PHP  não está ativa \n Por favor contatar o administrador";
+}
 ?>  
