@@ -1,4 +1,20 @@
 <?php
+/*
+ * Direitos Autorais (C) 2014 Wagner Hahn Silveira.
+ *
+ * Autor:
+ *	Wagner Hahn Silveira <wagnerhsilveira@gmail.com>
+ *
+ * Este software é licenciado sob os termos da Licença Pública Geral GNU
+ * License versão 2, como publicada pela Fundação de Software Livre, e
+ * pode ser copiada, distribuida, e modificada sob estes termos.
+ *
+ * Este programa é distribuido na esperança que será util,
+ * mas SEM NENHUMA GARANTIA; sem mesmo a garantia implícita de 
+ * COMERCIALIZAÇÃO ou de ADEQUAÇÃO A UM DETERMINADO FIM. veja o 
+ * Licença Pública Geral GNU para obter mais detalhes.
+ *
+ */
 if(extension_loaded('imap')){
 include('Imap.class.php');
 if (php_sapi_name()=='cli'){
@@ -118,6 +134,6 @@ echo "Migracao Concluida em ".date('d/m/Y -- H:i:s')."\n";
 echo "\n";
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
 }else{
-  echo "A extensão Imap para PHP  não está ativa \n Por favor contatar o administrador";
+  echo "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador";
 }
 ?>  
