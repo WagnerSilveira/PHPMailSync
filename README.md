@@ -67,6 +67,5 @@ ___
 
 #####Download
 
-1.0v -Download : https://www.dropbox.com/s/9afh84v3bahisot/phpmailsync.phar
+1.0v: https://www.dropbox.com/s/boa5j0548a3jqfj/phpmailsync.phar
 
-Atualizações: https://www.dropbox.com/s/9afh84v3bahisot/phpmailsync.phar
