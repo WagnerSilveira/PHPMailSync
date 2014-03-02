@@ -103,12 +103,12 @@ echo "\n";
 echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-    fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
+   	fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
 
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-		echo "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes		 \n";
+		echo "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes		      \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
@@ -131,7 +131,8 @@ echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
 echo "\n";
 echo "ESTATISTICAS\n";
 echo $destino->gerarEstatisticas()."\n";
-echo "Migracao Concluida em ".date('d/m/Y -- H:i:s')."\n";
+echo "Migracao iniciada em:  $inicio \n";
+echo "Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n";
 echo "\n";
 echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
 }else{

@@ -122,7 +122,7 @@ class Imap{
             		}
         	}
 	}
-	//
+
 	public function keepAlive(){
 		if (!imap_ping($this->stream)) {
 			if(!$this->conectar()){
@@ -147,66 +147,66 @@ class Imap{
 		if($this->tipo=="imap"){
            	    if($this->ssl==1){
                          $socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
-                        if($socket){
-                              $retorno=null;
-                              $retorno.=fread($socket,1024);
-                              fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
-                              $retorno=strstr($retorno,"A681 ",true);
-                              $retorno.=fread($socket,1024);
-                              $retorno=strstr($retorno,"A681 ",true);
-                              fwrite($socket,"A683 NAMESPACE\r\n");
-                              $retorno.=fread($socket,1024);
-                              $retorno=strstr($retorno,'* NAMESPACE ',false);
-                              $retorno=str_replace('* NAMESPACE ','',$retorno);
-                              $retorno=str_replace('((','',$retorno);
-                              $retorno=str_replace('))','',$retorno);
-                              $retorno=str_replace('"','',$retorno);
-                              $retorno=strstr($retorno,"A683 ",true);
-                              $retorno=explode(' ',$retorno);
-                              fclose($socket);
-                              
-                              if($retorno[0]){
-                                   $this->prefixo=$retorno[0];
-                                   return $this->prefixo; 
-                              }else{
-                                   $retorno='';
-                                   $this->prefixo=$retorno;
-                                   return $this->prefixo;
-                              } 
-                         }
-                }else{
-                    $socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
-                        if($socket){
-                              $retorno=null;
-                              $retorno.=fread($socket,1024);
-                              fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
-                              $retorno=strstr($retorno,"A681 ",true);
-                              $retorno.=fread($socket,1024);
-                              $retorno=strstr($retorno,"A681 ",true);
-                              fwrite($socket,"A683 NAMESPACE\r\n");
-                              $retorno.=fread($socket,1024);
-                              $retorno=strstr($retorno,'* NAMESPACE ',false);
-                              $retorno=str_replace('* NAMESPACE ','',$retorno);
-                              $retorno=str_replace('((','',$retorno);
-                              $retorno=str_replace('))','',$retorno);
-                              $retorno=str_replace('"','',$retorno);
-                              $retorno=strstr($retorno,"A683 ",true);
-                              $retorno=explode(' ',$retorno);
-                               if($retorno[0]){
-                                   $this->prefixo=$retorno[0];
-                                   return $this->prefixo; 
-                              }else{
-                                   $retorno='';
-                                   $this->prefixo=$retorno;
-                                   return $this->prefixo;
-                              }  
-                        }
-                }
+		                if($socket){
+		                      $retorno=null;
+		                      $retorno.=fread($socket,1024);
+		                      fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
+		                      $retorno=strstr($retorno,"A681 ",true);
+		                      $retorno.=fread($socket,1024);
+		                      $retorno=strstr($retorno,"A681 ",true);
+		                      fwrite($socket,"A683 NAMESPACE\r\n");
+		                      $retorno.=fread($socket,1024);
+		                      $retorno=strstr($retorno,'* NAMESPACE ',false);
+		                      $retorno=str_replace('* NAMESPACE ','',$retorno);
+		                      $retorno=str_replace('((','',$retorno);
+		                      $retorno=str_replace('))','',$retorno);
+		                      $retorno=str_replace('"','',$retorno);
+		                      $retorno=strstr($retorno,"A683 ",true);
+		                      $retorno=explode(' ',$retorno);
+		                      fclose($socket);
+		                      
+		                      if($retorno[0]){
+		                           $this->prefixo=$retorno[0];
+		                           return $this->prefixo; 
+		                      }else{
+		                           $retorno='';
+		                           $this->prefixo=$retorno;
+		                           return $this->prefixo;
+		                      } 
+		                 }
+		        }else{
+		            $socket=@fsockopen($this->servidor,$this->porta,$errno,$errstr,1);
+		                if($socket){
+		                      $retorno=null;
+		                      $retorno.=fread($socket,1024);
+		                      fwrite($socket,"A681 LOGIN $this->usuario $this->senha\r\n");
+		                      $retorno=strstr($retorno,"A681 ",true);
+		                      $retorno.=fread($socket,1024);
+		                      $retorno=strstr($retorno,"A681 ",true);
+		                      fwrite($socket,"A683 NAMESPACE\r\n");
+		                      $retorno.=fread($socket,1024);
+		                      $retorno=strstr($retorno,'* NAMESPACE ',false);
+		                      $retorno=str_replace('* NAMESPACE ','',$retorno);
+		                      $retorno=str_replace('((','',$retorno);
+		                      $retorno=str_replace('))','',$retorno);
+		                      $retorno=str_replace('"','',$retorno);
+		                      $retorno=strstr($retorno,"A683 ",true);
+		                      $retorno=explode(' ',$retorno);
+		                       if($retorno[0]){
+		                           $this->prefixo=$retorno[0];
+		                           return $this->prefixo; 
+		                      }else{
+		                           $retorno='';
+		                           $this->prefixo=$retorno;
+		                           return $this->prefixo;
+		                      }  
+		                }
+		        }
 
 		 }else{
-		    $retorno='';
-               $this->prefixo=$retorno;
-               return $this->prefixo;
+		 	 $retorno='';
+               		$this->prefixo=$retorno;
+               		return $this->prefixo;
 		 }
 
 	}	
@@ -322,10 +322,9 @@ class Imap{
 							if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
 								//Gera Estatistica - tamanhoTotalDeMensagensMigradas
 								$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
-								//Gera Estatistica 
+								//Fecha Estatistica 
 								$naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
 							}
-							
 						}else{
 						     //Gera Estatistica ->totalDeMensagensSemCabecalho
 						     $this->totalDeMensagensSemCabecalho++;
@@ -384,9 +383,8 @@ class Imap{
 			//Gera Estatistica -> totalDeMensagensNaoMigradas
 				$this->totalDeMensagensNaoMigradas++;
 			//Fecha Estatistica
-		     $erros = imap_errors();
-			 return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
-			  
+				$erros = imap_errors();
+				return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
 		}
 	}
 	
@@ -414,7 +412,6 @@ class Imap{
 			echo 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
 		}
 	}
-	
 	
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
@@ -473,24 +470,23 @@ class Imap{
 		return $porcentagemDeUso." %";
 	}
 	
-    public function verificarInfoQuota(){
+    	public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
 		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
 		 "\n".'DISPONIVEL: '.$this->ajustarMedida($this->verificarQuotaDisponivel()).
 		 "\n".'TOTAL: '.$this->ajustarMedida($this->verificarQuotaTotal())."\n"
 		 );
-    }
+    	}
 	
 	public function gerarEstatisticas(){
 		$this->totalDeMensagensExistentes = $this->totalDeMensagensNaOrigem - $this->totalDeMensagensMigradas;
 		
-		return ('Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
-		
+		return (
+		'Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
 		'Total de mensagens na origem: '.$this->totalDeMensagensNaOrigem."\n".
 		'Total de mensagens nao migradas, ja existentes na conta de destino: '.$this->totalDeMensagensExistentes."\n".
 		'Total de mensagens nao existentes na conta de destino: '.$this->totalDeMensagensNaoExistentes."\n".
-		
 		'Mensagens migradas com sucesso: '.$this->totalDeMensagensMigradas."\n".
 		'Mensagens nao migradas(Erro): '.$this->totalDeMensagensNaoMigradas."\n".
 		'Mensagens na origem sem Message-ID: '.$this->totalDeMensagensSemCabecalho."\n".
