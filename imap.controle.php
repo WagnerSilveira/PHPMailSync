@@ -105,12 +105,12 @@ foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
     fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
 
-	if($destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
-		$mensagensNaoExistentes= count($destino->verificarMensagensDuplicadas($origem,$pastasOrigem));
+	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
+		$msgsNaoExistentes=count($mensagensNaoExistentes);		
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-		echo "Mensagens nao existentes da pasta $pastasOrigem: $mensagensNaoExistentes \n";
+		echo "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes		 \n";
 		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-		foreach ($destino->verificarMensagensDuplicadas($origem,$pastasOrigem) as $key=>$uid){
+		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
 				echo "Conexao perdida com o host de origem";	

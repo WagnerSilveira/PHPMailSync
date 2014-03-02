@@ -288,10 +288,10 @@ class Imap{
 		$totalOrigem = imap_num_msg($origem->stream);
 		$totalDestino = imap_num_msg($this->stream);
 		//Gera Estatistica -> totalMensagensOrigem
-		
-		$this->totalDeMensagensNaOrigem=$this->totalDeMensagensNaOrigem+$totalOrigem;
-		
-		//Fecha Estatistica
+		if($totalOrigem >=1){
+			$this->totalDeMensagensNaOrigem+= $totalOrigem;
+		}
+		//Fecha Estatistica 
 		
 		$mensagensOrigem=null;
 		$mensagensDestino=null;
@@ -321,15 +321,11 @@ class Imap{
 						if(isset($MessageIdOrigem[$key]->message_id)){
 							if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
 								//Gera Estatistica - tamanhoTotalDeMensagensMigradas
-								$this->tamanhoTotalDeMensagensMigradas=$this->tamanhoTotalDeMensagensMigradas + $MessageIdOrigem[$key]->size;
+								$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
 								//Gera Estatistica 
-								$naoexistentes[] = $MessageIdOrigem[$key]->uid;
-								 
-							}else{
-								//Gera Estatistica -> totalMensagensOrigem 		
-									$this->totalDeMensagensExistentes++;
-								//Fecha Estatistica
+								$naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
 							}
+							
 						}else{
 						     //Gera Estatistica ->totalDeMensagensSemCabecalho
 						     $this->totalDeMensagensSemCabecalho++;
@@ -342,19 +338,15 @@ class Imap{
 		}else{
 		     if(isset($MessageIdOrigem)){
 			     foreach($MessageIdOrigem as $key => $mensagem){
-					//Gera Estatistica - tamanhoTotalDeMensagensMigradas
-						$this->tamanhoTotalDeMensagensMigradas=$MessageIdOrigem[$key]->size + $this->tamanhoTotalDeMensagensMigradas;
-					//Gera Estatistica 
-					
-				     $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+				$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    					$naoexistentes[] = $MessageIdOrigem[$key]->uid;
 			    }//Fecha Foreach
 			}//Fecha if(isset...
 		}//Fecha else
-		//Gera Estatistica
 		
-			$this->totalDeMensagensNaoExistentes=$this->totalDeMensagensNaoExistentes + (count($naoexistentes));
-			
-		//Fecha Estatistica
+		$msgsNaoExistentes= count($naoexistentes);
+		if($msgsNaoExistentes >=1){
+			$this->totalDeMensagensNaoExistentes+=$msgsNaoExistentes;
+		}
 		return $naoexistentes;
 	}	
 	
@@ -385,6 +377,7 @@ class Imap{
 				//Gera Estatistica -> totalDeMensagensMigradas
 				 $this->totalDeMensagensMigradas++;
 				//Fecha Estatistica
+				
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
 				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
 		}else{
@@ -430,7 +423,7 @@ class Imap{
 	}
 	
 	public function ajustarMedida($medidaEmKB){
-	    $kiloBytes =$medidaEmKB;
+	  	 $kiloBytes =$medidaEmKB;
 		$megaBytes =$medidaEmKB*1024/1048576;
 		$gigaBytes =$medidaEmKB*1024/1073741824;
 		
@@ -442,7 +435,7 @@ class Imap{
 				$megaBytes = number_format($megaBytes,2)." MB";
 				return $megaBytes;
 			}else{
-				return $kiloBytes." KB";
+				return number_format($kiloBytes,2)." KB";
 			}
 		}    
 	}
@@ -490,10 +483,14 @@ class Imap{
     }
 	
 	public function gerarEstatisticas(){
+		$this->totalDeMensagensExistentes = $this->totalDeMensagensNaOrigem - $this->totalDeMensagensMigradas;
+		
 		return ('Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
+		
 		'Total de mensagens na origem: '.$this->totalDeMensagensNaOrigem."\n".
 		'Total de mensagens nao migradas, ja existentes na conta de destino: '.$this->totalDeMensagensExistentes."\n".
-		'Total de nao existentes na conta de destino: '.$this->totalDeMensagensNaoExistentes."\n".
+		'Total de mensagens nao existentes na conta de destino: '.$this->totalDeMensagensNaoExistentes."\n".
+		
 		'Mensagens migradas com sucesso: '.$this->totalDeMensagensMigradas."\n".
 		'Mensagens nao migradas(Erro): '.$this->totalDeMensagensNaoMigradas."\n".
 		'Mensagens na origem sem Message-ID: '.$this->totalDeMensagensSemCabecalho."\n".
