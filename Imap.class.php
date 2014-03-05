@@ -16,6 +16,13 @@
  *
  */
 
+/**
+*       
+*
+*
+*
+*
+*/
 class Imap{
 	//Conexao 
 	private $stream;
@@ -45,22 +52,52 @@ class Imap{
 	private $totalDeMensagensNaoMigradas=0;
 	private $tamanhoTotalDeMensagensMigradas=0;
 	
-	
-	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function __construct($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl);
 
 	}
+	
+	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function __get($atributo){
 		return $this->$atributo;
 	}
-		
+	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/
 	public function __set($atributo,$valor){
 		$this->$atributo = $valor;
 	}
 	
-	//	Funcao Conectar Original
-	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function conectar(){
 		if($this->tipo=="imap"){
 			if($this->ssl==1){
@@ -88,7 +125,15 @@ class Imap{
         	 }//fecha if POP3 
 	
 	}
-
+	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->servidor=$servidor;
 	      $this->usuario=$usuario;
@@ -102,7 +147,16 @@ class Imap{
 				$this->porta=($this->ssl==1)?'995':'110';
 	      }  
      	}
-	
+     	
+     	
+	/**
+	*       
+	*
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function testarConexao(){
 		if($this->ssl==1){
 			$socket=@fsockopen("ssl://".$this->servidor,$this->porta,$errno,$errstr,1);
@@ -122,7 +176,14 @@ class Imap{
             		}
         	}
 	}
-
+	
+	/**
+	*       
+	*
+	*
+	*
+	*
+	*/
 	public function keepAlive(){
 		if (!imap_ping($this->stream)) {
 			if(!$this->conectar()){
@@ -132,17 +193,45 @@ class Imap{
 		return false;
 	}
 	
+	
+	
+	
+	/**
+	*       
+	*    
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 24, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function listarMailBox(){
 	    $this->pastas= imap_list($this->stream,$this->mbox, "*");
 		return $this->pastas;	
 	} 
 	
+	
+	/**
+	*       
+	*    
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 24, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function listarPastas($mailbox){
 		$pos = strpos($mailbox,"}");
 		$pastas = substr($mailbox,$pos+1);
 		return $pastas;
 	}
 	
+	
+	
+	/**
+	*       Apenas para servidores IMAP
+	*
+	*
+        *
+	*/
 	public function verificarPrefixo(){
 		if($this->tipo=="imap"){
            	    if($this->ssl==1){
@@ -209,20 +298,52 @@ class Imap{
                		return $this->prefixo;
 		 }
 
-	}	
-
+	}
+	
+	
+	
+		
+	/**
+	*       
+	*     Apenas entre servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 03, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function verificarTipoSeparador(){
 		$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
 		$this->separador= $this->separador[0]->delimiter;
 		return $this->separador;
 	}
-	 	
+	
+	
+	
+	/**
+	*       
+	*     
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 12 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* 
+	*/
 	public function limparImapCache($origem){
 		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
 		imap_gc($this->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
 	}
 	 
-	// Funcao para ser utilizada no host de destino
+	 
+	
+	/**
+	*       
+	*     Apenas entre servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 03, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* 
+	*/
 	public function verificarPadraoMailbox($origem,$pastas){
 		/*Esta funcao necessita das funcoes abaixo
 			$this->listarMailBox();
@@ -258,6 +379,16 @@ class Imap{
 		}
 	}
 	
+	
+	/**
+	*       
+	*     Apenas entre servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 03, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* 
+	*/
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
 		if(!array_search($this->mbox.$pastas,$this->pastas)){
@@ -279,6 +410,18 @@ class Imap{
 		return "Pasta ja existe: $pastas  \n";
 	}
 	
+	
+	
+	
+	/**
+	*       
+	*     Apenas entre servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 12 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* 
+	*/
 	public function verificarMensagensDuplicadas($origem,$pastas){
 	     //Função verifica mensagem pela Message-ID
 		imap_reopen($origem->stream,$origem->mbox.$pastas);
@@ -354,6 +497,13 @@ class Imap{
 		return $naoexistentes;
 	}	
 	
+	
+	
+	/**
+	*       Apenas para servidores IMAP
+	*
+	*
+	*/
 	public function listarMensagensPorPastas($origem,$pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$cabecalhos = imap_headers($this->stream);
@@ -361,7 +511,16 @@ class Imap{
 			echo $mensagens."\n";
 		}
 	}
-	
+
+	/**
+	*       
+	*     Apenas entre servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Feb 12 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* 
+	*/
 	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
 		imap_reopen($origem->stream,$origem->mbox.$pastasOrigem);
 		$pastasDestino=$this->verificarPadraoMailbox($origem,$pastasOrigem);
@@ -395,6 +554,14 @@ class Imap{
 		}
 	}
 	
+	
+	
+	
+	/**
+	*       Apenas para servidores IMAP
+	*
+	*
+	*/
 	public function setarFlags($origem,$uid,$pastasDestino,$uidDestino){
 		//Setar Flags no destino
 		$msgNum= imap_msgno($origem->stream,$uid);	
@@ -421,12 +588,28 @@ class Imap{
 		return $flags;
 	}
 	
+	
+	
+	/**
+	*       Apenas para servidores IMAP
+	*
+	*
+	*/
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
 		$totalMsgs = imap_num_msg($this->stream);
 		return $totalMsgs;
 	}
 	
+	
+	
+	/**
+	*       
+	*
+	*
+	*
+	*
+	*/
 	public function ajustarMedida($medidaEmKB){
 	  	 $kiloBytes =$medidaEmKB;
 		$megaBytes =$medidaEmKB*1024/1048576;
@@ -445,32 +628,80 @@ class Imap{
 		}    
 	}
 	
+	
+	/**
+	*       
+	*
+	*
+	*/
 	public function ajustarMedidaBytes($medidaEmBytes){
 		$medidaEmKB= $medidaEmBytes/1024;
 		return $this->ajustarMedida($medidaEmKB);
 	}
 	
+	/**
+	*       
+	*       Apenas para servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function receberInfoQuotaTotal(){
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
 	}
 	
+	
+	
+	/**
+	*       
+	*       Apenas para servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function verificarQuotaTotal(){
 		//Usar apenas para a Raiz (INBOX)
 		$this->quotaTotal= $this->quota["limit"];
 		return $this->quotaTotal;
 	}
 	
+	/**
+	*       
+	*       Apenas para servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function verificarQuotaDeUso(){
 		$this->quotaEmUso= $this->quota["usage"];
 		return $this->quotaEmUso; 
 	}
 	
+	/**
+	*       
+	*       Apenas para servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function verificarQuotaDisponivel(){
 		//Usar apenas para a Raiz (INBOX)
 		$this->quotaDisponivel= $this->quota["limit"] - $this->quota["usage"];
 		return $this->quotaDisponivel;
 	}
 	
+	/**
+	*       
+	*       Apenas para servidores IMAP
+	*
+	* @author       Wagner Hahn Silveira
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	*/	
 	public function verificarPorgentagemDeUso(){
 		//Usar apenas para a Raiz (INBOX)
 		$porcentagemDeUso= ($this->quota["usage"]*100)/$this->quota["limit"];
@@ -478,6 +709,12 @@ class Imap{
 		return $porcentagemDeUso." %";
 	}
 	
+	
+	/**
+	*       Apenas para servidores IMAP
+	*
+	*
+	*/
     	public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
 		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
@@ -487,6 +724,14 @@ class Imap{
 		 );
     	}
 	
+	
+	/**
+	*       
+	*
+	*
+	*
+	*
+	*/
 	public function gerarEstatisticas(){
         	return (
 		'Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
@@ -498,7 +743,6 @@ class Imap{
 		'Mensagens na origem sem Message-ID: '.$this->totalDeMensagensSemCabecalho."\n".
 		'Tamanho total de mensagens migradas: '.$this->ajustarMedidaBytes($this->tamanhoTotalDeMensagensMigradas)."\n");
 	}
-	
 	
 }
 ?>
