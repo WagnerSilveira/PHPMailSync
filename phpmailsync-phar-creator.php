@@ -15,11 +15,11 @@
  * Licença Pública Geral GNU para obter mais detalhes.
  *
  */
-$p = new Phar('phpmailsync.phar');
+$p = new Phar('phpmailsync-cli.phar');
 $p->startBuffering();
 $p->addFile('Imap.class.php');
-$p->addFile('imap.controle.php');
-$p->setStub($p->createDefaultStub('imap.controle.php'));
+$p->addFile('phpmailsync-cli.php');
+$p->setStub($p->createDefaultStub('phpmailsync-cli.php'));
 $p->stopBuffering();
 
 ?>
