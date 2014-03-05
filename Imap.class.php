@@ -324,6 +324,10 @@ class Imap{
 								$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
 								//Fecha Estatistica 
 								$naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
+							}else{
+							        //Gera Estatistica
+							        $this->totalDeMensagensExistentes++;
+							        //Fecha Estatistica 
 							}
 						}else{
 						     //Gera Estatistica ->totalDeMensagensSemCabecalho
@@ -484,9 +488,7 @@ class Imap{
     	}
 	
 	public function gerarEstatisticas(){
-		$this->totalDeMensagensExistentes = $this->totalDeMensagensNaOrigem - $this->totalDeMensagensMigradas;
-		
-		return (
+        	return (
 		'Numero de pastas criadas: '.$this->numeroDePastasCriadas."\n".
 		'Total de mensagens na origem: '.$this->totalDeMensagensNaOrigem."\n".
 		'Total de mensagens nao migradas, ja existentes na conta de destino: '.$this->totalDeMensagensExistentes."\n".
