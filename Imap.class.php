@@ -337,7 +337,8 @@ class Imap{
 		}else{
 		     if(isset($MessageIdOrigem)){
 			     foreach($MessageIdOrigem as $key => $mensagem){
-				$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    					$naoexistentes[] = $MessageIdOrigem[$key]->uid;
+				$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    			
+				$naoexistentes[] = $MessageIdOrigem[$key]->uid;
 			    }//Fecha Foreach
 			}//Fecha if(isset...
 		}//Fecha else
@@ -367,18 +368,20 @@ class Imap{
 		
 		$cabecalho = imap_fetchheader($origem->stream,$uid,FT_UID);
 		$corpo = imap_body($origem->stream,$uid,FT_UID | FT_PEEK);
+		$flags = $this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
 		
 		usleep(150000);/*  ==> Essa funcao serve para diminuir o load da máquina
 		Sem o Usleep, o uso da CPU chega a 25%, com ele no máximo ate 3%
 	     150000 micro_segundos igual a 0,15 segundos de espera 
 			*/
-		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo)) {
+		
+		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo, $flags)) {
 				//Gera Estatistica -> totalDeMensagensMigradas
 				 $this->totalDeMensagensMigradas++;
 				//Fecha Estatistica
-				
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
-				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))."\n";
+				
+				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." Flags: $flags \n";
 		}else{
 			//Gera Estatistica -> totalDeMensagensNaoMigradas
 				$this->totalDeMensagensNaoMigradas++;
@@ -394,9 +397,9 @@ class Imap{
 		$cabecalhoMsg = imap_headerinfo($origem->stream,$msgNum);	
 		$flags=null; 
 		if($cabecalhoMsg->Unseen != 'U'){
-			$flags=' \\Seen';
+			$flags='\\Seen';
 		}
-        if($cabecalhoMsg->Flagged == 'F'){
+                if($cabecalhoMsg->Flagged == 'F'){
 			$flags.=' \\Flagged';
 		}
 		if($cabecalhoMsg->Answered == 'A'){
@@ -411,6 +414,7 @@ class Imap{
 		if(!imap_setflag_full($this->stream,$uidDestino,$flags,ST_UID)){
 			echo 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
 		}
+		return $flags;
 	}
 	
 	public function listarTotalMensagensPorMailbox($pastas){
