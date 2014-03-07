@@ -59,6 +59,13 @@ class PhpMailSync{
 	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	*
+	* @param        string $servidor
+	* @param        string $usuario
+	* @param        string $senha
+	* @param        string $tipo
+	* @param        integer $ssl
+	*
 	* @return       void 
 	*/	
 	public function __construct($servidor,$usuario,$senha,$tipo,$ssl){
@@ -136,6 +143,13 @@ class PhpMailSync{
 	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+        *
+	* @param        string $servidor
+	* @param        string $usuario
+	* @param        string $senha
+	* @param        string $tipo
+	* @param        integer $ssl
+	*
 	* @return       void 
 	*/	
 	public function receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl){
@@ -216,7 +230,8 @@ class PhpMailSync{
         *       [9] => {imap.example.com}Sent Items  
         *     [10] => {imap.example.com}Tasks
         * )
-        *       
+        * 
+        *      
 	* @since        Jan 24, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @return        array
@@ -234,8 +249,9 @@ class PhpMailSync{
 	* A função retira a informação {imap.example.com}, e mantem apenas  Calendar
 	* Esta função depende e complementa a função listarMailBox()
 	* Dica: Receber dados vindos de um foreach da função  listarMailBox()s
-	* Duvidas sobre o que seria uma Mailbox - .http://www.php.net/manual/pt_BR/function.imap-open.php
+	* Duvidas sobre o que seria uma Mailbox - > http://www.php.net/manual/pt_BR/function.imap-open.php
 	* 
+	*
 	* @since        Jan 24, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @param        string $mailbox 
@@ -253,6 +269,7 @@ class PhpMailSync{
         * Retorna o prefixo de pastas do servidor IMAP,  mais comuns:  " INBOX. " , "Inbox." , "INBOX/" ou nenhum 
 	* Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
 	* Disponivel apenas para servidores IMAP
+	*
 	*
 	* @since        Feb 28, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
@@ -348,7 +365,8 @@ class PhpMailSync{
 	
 	/**
 	* Função limpa o Cache dos servidores IMAP  de origem e destino    
-	*     
+	* 
+	*
 	* @since        Feb 12 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
 	* @param        object $origem
@@ -368,8 +386,10 @@ class PhpMailSync{
 	* 
 	* @since        Feb 03, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	*
 	* @param        object  $origem
 	* @param        string  $pastas   As pastas devem ser as do servidor de origem
+	*
 	* @return       string  
 	*/
 	public function verificarPadraoMailbox($origem,$pastas){
@@ -415,8 +435,10 @@ class PhpMailSync{
 	* 
 	* @since        Feb 03, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	*
         * @param        object  $origem
 	* @param        string  $pastas   As pastas devem ser as do servidor de origem 
+	*
 	* @return       string  Status de execução
 	*/
 	public function criarMailboxInexistentes($origem,$pastas){
@@ -451,8 +473,10 @@ class PhpMailSync{
 	* 
 	* @since        Feb 12 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	*
 	* @param        object  $origem
 	* @param        string  $pastas   As pastas devem ser as do servidor de origem 
+	*
 	* @return       array  unidimencional
 	*/
 	public function verificarMensagensDuplicadas($origem,$pastas){
@@ -549,6 +573,7 @@ class PhpMailSync{
 	* 
 	* @since        Feb 12 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	*
 	* @param        object  $origem
 	* @param        string  $pastasOrigem   As pastas devem ser as do servidor de origem 
 	* @param        string $uid  Recebe o UID da mensagem no servidor de origem
@@ -596,6 +621,7 @@ class PhpMailSync{
 	* Disponivel apenas para servidores IMAP
 	* O que são Flags -> http://tools.ietf.org/html/rfc3501#page-11
 	*
+	*
 	* @since        Feb 24 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @return       string  
@@ -632,6 +658,8 @@ class PhpMailSync{
 	*
 	*
 	* Disponivel apenas para servidores IMAP
+	*
+	*
 	* @param        string  $pastas As pastas podem ser tanto do servidor de origem quanto de destino
 	* @return       integer
 	*/
@@ -644,6 +672,8 @@ class PhpMailSync{
 	
 	/**
 	* Ajusta a medida recebida  em bytes e retorna os valores possiveis em  bytes, kilobytes, megabytes ou gigabytes
+	*
+	*
 	* @since       Feb 04, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @param        integer  $medidaEmBytes Deve receber medidas em bytes
@@ -658,6 +688,7 @@ class PhpMailSync{
 	/**
 	*       
 	* Ajusta a medida recebida e retorna valores possiveis em kilobytes, megabytes ou gigabytes
+	*
 	*
 	* @since       Feb 04, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
@@ -689,6 +720,7 @@ class PhpMailSync{
 	*  Comando GETQUOTAROOT  -> https://www.ietf.org/rfc/rfc2087.txt
 	*  Disponivel apenas para servidores IMAP 
 	*
+	*
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @return       void    
@@ -705,6 +737,7 @@ class PhpMailSync{
 	* Disponivel apenas para servidores IMAP
         *  Retorna a quota da conta de email, o espaço limite que a conta pode utilizar no servidor.
 	* 
+	*
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
         * @return       integer  Medida original em KiloByte(KB)
@@ -720,6 +753,7 @@ class PhpMailSync{
 	* Disponivel apenas para servidores IMAP
 	* Retorna o total de espaço utilizado pela conta de email dentro de sua  quota(LImite) no servidor IMAP
 	* 
+	*
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
 	* @return       integer Medida original em KiloByte(KB)
@@ -734,6 +768,7 @@ class PhpMailSync{
 	* Disponivel apenas para servidores IMAP
 	*  Verifica o total de espaço disponivel  que a conta de email ainda possuim  dentro de sua quota no servidor IMAP     
 	* 
+	*
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html
         * @return       integer  Medida original em KiloByte(KB)
@@ -764,6 +799,8 @@ class PhpMailSync{
 	/**
 	* Disponivel apenas para servidores IMAP
 	* Retorna todas as informações de quota
+	*
+	*
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
 	* @return       string
@@ -781,6 +818,7 @@ class PhpMailSync{
 	/**
 	*       
 	*   Gera estatisticas apos a migração
+	*
 	*
 	* @since       Feb 26, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
