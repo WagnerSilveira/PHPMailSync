@@ -17,7 +17,7 @@
  */
 $p = new Phar('phpmailsync-cli.phar');
 $p->startBuffering();
-$p->addFile('Imap.class.php');
+$p->addFile('PhpMailSync.class.php');
 $p->addFile('phpmailsync-cli.php');
 $p->setStub($p->createDefaultStub('phpmailsync-cli.php'));
 $p->stopBuffering();

@@ -23,7 +23,7 @@
 *
 *
 */
-class Imap{
+class PhpMailSync{
 	//Conexao 
 	private $stream;
 	private $servidor;
@@ -55,24 +55,25 @@ class Imap{
 	/**
 	*       
 	*
-	*
+	* Contrutor da classe 
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       void 
 	*/	
 	public function __construct($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl);
 
 	}
 	
-	
-	/**
-	*       
+	/**     
 	*
-	*
+	* Método mágico __get
+	* O que são métodos mágicos -> http://www.php.net/manual/pt_BR/language.oop5.magic.php
 	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return       mixed
 	*/	
 	public function __get($atributo){
 		return $this->$atributo;
@@ -80,11 +81,12 @@ class Imap{
 	
 	/**
 	*       
-	*
-	*
+	* Método mágico __set
+	* O que são métodos mágicos -> http://www.php.net/manual/pt_BR/language.oop5.magic.php
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       void 
 	*/
 	public function __set($atributo,$valor){
 		$this->$atributo = $valor;
@@ -92,11 +94,12 @@ class Imap{
 	
 	/**
 	*       
-	*
+	*  Esta função estabelece e mantem uma conexão(Stream)  com o servidor IMAP/POP3 
 	*
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       resource 
 	*/	
 	public function conectar(){
 		if($this->tipo=="imap"){
@@ -128,11 +131,12 @@ class Imap{
 	
 	/**
 	*       
-	*
+	* Recebe as informações para efetuar a conexão com o servidor 
 	*
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       void 
 	*/	
 	public function receberInformacoesDeConexao($servidor,$usuario,$senha,$tipo,$ssl){
 	      $this->servidor=$servidor;
@@ -151,11 +155,12 @@ class Imap{
      	
 	/**
 	*       
-	*
-	*
+	* Testa se o servidor está online e respondendo na porta apropriada de acordo com seu tipo(IMAP, ou POP) com ou sem SSL.
+	* 
 	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return        boolean
 	*/	
 	public function testarConexao(){
 		if($this->ssl==1){
@@ -178,11 +183,12 @@ class Imap{
 	}
 	
 	/**
-	*       
+	*  Verifica se a conexão está ativa, caso não,  tenta reconectar no servidor 
 	*
-	*
-	*
-	*
+        *
+	* @since        Feb 24 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return       boolean  
 	*/
 	public function keepAlive(){
 		if (!imap_ping($this->stream)) {
@@ -194,15 +200,26 @@ class Imap{
 	}
 	
 	
-	
-	
 	/**
 	*       
-	*    
-	*
-	* 
+	* Esta função retora um array com a lista de pastas no padrão baixo
+	* Array(
+        *       [0] => {imap.example.com}Calendar
+        *       [1] => {imap.example.com}Contacts
+        *       [2] => {imap.example.com}Deleted Items
+        *       [3] => {imap.example.com}Drafts
+        *       [4] => {imap.example.com}Journal
+        *       [5] => {imap.example.com}Junk E-mail
+        *       [6] => {imap.example.com}Notes
+        *       [7] => {imap.example.com}Outbox
+        *       [8] => {imap.example.com}RSS Feeds
+        *       [9] => {imap.example.com}Sent Items  
+        *     [10] => {imap.example.com}Tasks
+        * )
+        *       
 	* @since        Jan 24, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return        array
 	*/	
 	public function listarMailBox(){
 	    $this->pastas= imap_list($this->stream,$this->mbox, "*");
@@ -211,12 +228,18 @@ class Imap{
 	
 	
 	/**
-	*       
-	*    
-	*
+	*      
+	* Esta função retira  as informações do servidor(ou mailbox)  mantendo apenas o nome das pastas.
+	* Exemplo:  {imap.example.com}Calendar
+	* A função retira a informação {imap.example.com}, e mantem apenas  Calendar
+	* Esta função depende e complementa a função listarMailBox()
+	* Dica: Receber dados vindos de um foreach da função  listarMailBox()s
+	* Duvidas sobre o que seria uma Mailbox - .http://www.php.net/manual/pt_BR/function.imap-open.php
 	* 
 	* @since        Jan 24, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @param        string $mailbox 
+	* @return       string
 	*/	
 	public function listarPastas($mailbox){
 		$pos = strpos($mailbox,"}");
@@ -227,12 +250,13 @@ class Imap{
 	
 	
 	/**
-	*       Apenas para servidores IMAP
+        * Retorna o prefixo de pastas do servidor IMAP,  mais comuns:  " INBOX. " , "Inbox." , "INBOX/" ou nenhum 
+	* Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
+	* Disponivel apenas para servidores IMAP
 	*
 	* @since        Feb 28, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Retorna o prefixo de pastas do servidor IMAP,  mais comuns:  " INBOX. " , "Inbox." , "INBOX/" ou nenhum 
-	* Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
+	* @return       string  
 	*/	
 	public function verificarPrefixo(){
 		if($this->tipo=="imap"){
@@ -299,21 +323,20 @@ class Imap{
                		$this->prefixo=$retorno;
                		return $this->prefixo;
 		 }
-
 	}
 	
 	
 	
 		
 	/**
-	*       
-	*     Apenas entre servidores IMAP
+	* Esta função retorna o sepadador (ou delimitador) hierárquico de pastas do servidor IMAP, o mais comum pode ser  " / " (barra) ou  " ."(ponto)
+        * Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
+	* Disponivel apenas para servidores IMAP
 	*
 	* 
 	* @since        Feb 03, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Retorna o sepadador (ou delimitador) hierárquico de pastas do servidor IMAP, o mais comum pode ser  " / " (barra) ou  " ."(ponto)
-	* Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
+	* @return       string  
 	*/	
 	public function verificarTipoSeparador(){
 		$this->separador= imap_getmailboxes($this->stream,$this->mbox,"*");
@@ -324,13 +347,12 @@ class Imap{
 	
 	
 	/**
-	*       
+	* Função limpa o Cache dos servidores IMAP  de origem e destino    
 	*     
-	*
-	* 
 	* @since        Feb 12 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       void    Limpa Cache de servidores IMAP 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @param        object $origem
+	* @return       void    
 	*/
 	public function limparImapCache($origem){
 		imap_gc($origem->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
@@ -340,13 +362,15 @@ class Imap{
 	 
 	
 	/**
-	*       
-	*     Apenas entre servidores IMAP
+	*  Efetua a formatação das pastas vindas do servidor IMAP de origem de acordo com o padrão das pastas encontradas no servidor IMAP de destino.
+	* Disponivel apenas para servidores IMAP
 	*
 	* 
 	* @since        Feb 03, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Efetua a formatação das pastas vindas do servidor IMAP de origem de acordo com o padrão das pastas encontradas no servidor IMAP de destino.
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @param        object  $origem
+	* @param        string  $pastas   As pastas devem ser as do servidor de origem
+	* @return       string  
 	*/
 	public function verificarPadraoMailbox($origem,$pastas){
 		/*Esta funcao necessita das funcoes abaixo
@@ -365,7 +389,7 @@ class Imap{
 					$pastas="Inbox".$this->separador.$pastas; 
 					$pastas=str_replace('Inbox'.$this->separador.'Inbox','Inbox',$pastas);
 					return $pastas;
-		 }else{
+	        }else{
 				if(preg_match("/INBOX\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/INBOX\\".$this->separador."/","",$pastas);
 						
@@ -385,13 +409,15 @@ class Imap{
 	
 	
 	/**
-	*       
-	*     Apenas entre servidores IMAP
+	* Esta função efetua a criação das pastas no servidor IMAP de destino e  retorna o status da execução.
+	* Disponivel apenas entre servidores IMAP
 	*
 	* 
 	* @since        Feb 03, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Efetua a criação das pastas no servidor IMAP de destino e  retorna o status da execução.
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+        * @param        object  $origem
+	* @param        string  $pastas   As pastas devem ser as do servidor de origem 
+	* @return       string  Status de execução
 	*/
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
@@ -418,15 +444,16 @@ class Imap{
 	
 	
 	/**
-	*       
-	*     Apenas entre servidores IMAP
+        * Esta função retorna um array unidimencional com as UID das mensagens no servidor IMAP de origem que são Inexistentes no servidor IMAP de destino.
+	* A primeira verificação que esta função faz é  de receber todos os Message-ID das mensagens na pasta ao qual está e coloca-las neste array unidimencional, para mais tarde efetuar a comparação.
+	* Caso a Message-ID da mensagem no servidor de origem não for encontrado no array com os Message-IDs  das mensagens no servidor de destino, essa mensagem é inserida neste array, referenciado pela varialvel local $naoexistentes para que   seja migrado posteriormente.
 	*
 	* 
 	* @since        Feb 12 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       array  Retorna um array unidimencional com as UID das mensagens no servidor IMAP de origem que são Inexistentes no servidor IMAP de destino.
-	* A primeira verificação que esta função faz é  de receber todos os Message-ID das mensagens na pasta ao qual está e coloca-las em um array unidimencional, para mais tarde efetuar a comparação.
-	* Caso a Message-ID da mensagem no servidor de origem não for encontrado no array de Message-IDs no servidor de destino, essa mensagem é inserida no array referenciado pela varialvel local $naoexistentes para que   seja migrado posteriormente.
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @param        object  $origem
+	* @param        string  $pastas   As pastas devem ser as do servidor de origem 
+	* @return       array  unidimencional
 	*/
 	public function verificarMensagensDuplicadas($origem,$pastas){
 	     //Função verifica mensagem pela Message-ID
@@ -503,7 +530,7 @@ class Imap{
 	
 	
 	/**
-	*       Apenas para servidores IMAP
+	* Disponivel apenas para servidores IMAP
 	*
 	*
 	*/
@@ -516,13 +543,17 @@ class Imap{
 	}
 
 	/**
-	*       
-	*     Apenas entre servidores IMAP
+	* Esta função efetua a migração das mensagems entre servidores IMAP e retorna o status da execução. 
+	* Disponivel apenas entre servidores IMAP
 	*
 	* 
 	* @since        Feb 12 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Efetua a migracao das mensagems entre servidores IMAP e retorna o status da execução. 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @param        object  $origem
+	* @param        string  $pastasOrigem   As pastas devem ser as do servidor de origem 
+	* @param        string $uid  Recebe o UID da mensagem no servidor de origem
+	*
+	* @return       string  Status da execução
 	*/
 	public function migrarMensagensImap($origem,$pastasOrigem,$uid){
 		imap_reopen($origem->stream,$origem->mbox.$pastasOrigem);
@@ -561,14 +592,13 @@ class Imap{
 	
 	
 	/**
-	*
-	*       Apenas para servidores IMAP
-	*
-	*
-	* @since        Feb 42 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       string  Retorna as Flags de uma mensagem no servidor IMAP de origem para ser inserida posteriormente na mesma mensagem no servidor  IMAP de destino 
+	* Retorna as Flags de uma mensagem no servidor IMAP de origem para ser inserida posteriormente na mesma mensagem no servidor  IMAP de destino.
+	* Disponivel apenas para servidores IMAP
 	* O que são Flags -> http://tools.ietf.org/html/rfc3501#page-11
+	*
+	* @since        Feb 24 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return       string  
 	*/
 	public function setarFlags($origem,$uid,$pastasDestino,$uidDestino){
 		//Setar Flags no destino
@@ -599,9 +629,11 @@ class Imap{
 	
 	
 	/**
-	*       Apenas para servidores IMAP
 	*
 	*
+	* Disponivel apenas para servidores IMAP
+	* @param        string  $pastas As pastas podem ser tanto do servidor de origem quanto de destino
+	* @return       integer
 	*/
 	public function listarTotalMensagensPorMailbox($pastas){
 		imap_reopen($this->stream,$this->mbox.$pastas);
@@ -611,9 +643,11 @@ class Imap{
 	
 	
 	/**
-	*       
-	*
-	*
+	* Ajusta a medida recebida  em bytes e retorna os valores possiveis em  bytes, kilobytes, megabytes ou gigabytes
+	* @since       Feb 04, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @param        integer  $medidaEmBytes Deve receber medidas em bytes
+	* @return        string
 	*/
 	public function ajustarMedidaBytes($medidaEmBytes){
 		$medidaEmKB= $medidaEmBytes/1024;
@@ -623,10 +657,12 @@ class Imap{
 	
 	/**
 	*       
+	* Ajusta a medida recebida e retorna valores possiveis em kilobytes, megabytes ou gigabytes
 	*
-	*
-	*
-	*
+	* @since       Feb 04, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+ 	* @param        integer  $medidaEmKB    Deve receber medidas em KiloByte
+	* @return       string
 	*/
 	public function ajustarMedida($medidaEmKB){
 	  	 $kiloBytes =$medidaEmKB;
@@ -649,13 +685,14 @@ class Imap{
 	
 	/**
 	*       
-	*       Apenas para servidores IMAP
+	*  Insere a quota total (utilizado e disponivel) da conta no atributo $quota 
+	*  Comando GETQUOTAROOT  -> https://www.ietf.org/rfc/rfc2087.txt
+	*  Disponivel apenas para servidores IMAP 
 	*
-	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
-	* @return       void    Insere a quota total (utilizado e disponivel) da conta no atributo $quota 
-	*  Comando GETQUOTAROOT  -> https://www.ietf.org/rfc/rfc2087.txt
+	* @return       void    
+
 	*/	
 	public function receberInfoQuotaTotal(){
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
@@ -665,11 +702,12 @@ class Imap{
 	
 	/**
 	*       
-	*       Apenas para servidores IMAP
-	*
+	* Disponivel apenas para servidores IMAP
+        *  Retorna a quota da conta de email, o espaço limite que a conta pode utilizar no servidor.
 	* 
 	* @since        Jan 20, 2014
 	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+        * @return       integer  Medida original em KiloByte(KB)
 	*/	
 	public function verificarQuotaTotal(){
 		//Usar apenas para a Raiz (INBOX)
@@ -679,11 +717,12 @@ class Imap{
 	
 	/**
 	*       
-	*       Apenas para servidores IMAP
-	*
+	* Disponivel apenas para servidores IMAP
+	* Retorna o total de espaço utilizado pela conta de email dentro de sua  quota(LImite) no servidor IMAP
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       integer Medida original em KiloByte(KB)
 	*/	
 	public function verificarQuotaDeUso(){
 		$this->quotaEmUso= $this->quota["usage"];
@@ -692,11 +731,12 @@ class Imap{
 	
 	/**
 	*       
-	*       Apenas para servidores IMAP
-	*
+	* Disponivel apenas para servidores IMAP
+	*  Verifica o total de espaço disponivel  que a conta de email ainda possuim  dentro de sua quota no servidor IMAP     
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+        * @return       integer  Medida original em KiloByte(KB)
 	*/	
 	public function verificarQuotaDisponivel(){
 		//Usar apenas para a Raiz (INBOX)
@@ -705,12 +745,13 @@ class Imap{
 	}
 	
 	/**
-	*       
-	*       Apenas para servidores IMAP
+	*  Verifica a porcentagem de uso da conta de email(quota) no servidor IMAP     
+	* Disponivel apenas para servidores IMAP
 	*
 	* 
 	* @since        Jan 20, 2014
-	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html
+	* @return       string 
 	*/	
 	public function verificarPorgentagemDeUso(){
 		//Usar apenas para a Raiz (INBOX)
@@ -721,9 +762,11 @@ class Imap{
 	
 	
 	/**
-	*       Apenas para servidores IMAP
-	*
-	*
+	* Disponivel apenas para servidores IMAP
+	* Retorna todas as informações de quota
+	* @since        Jan 20, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return       string
 	*/
     	public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
@@ -737,10 +780,11 @@ class Imap{
 	
 	/**
 	*       
+	*   Gera estatisticas apos a migração
 	*
-	*
-	*
-	*
+	* @since       Feb 26, 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return       string
 	*/
 	public function gerarEstatisticas(){
         	return (

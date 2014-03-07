@@ -17,7 +17,7 @@
  */
 
 if(extension_loaded('imap')){
-include('Imap.class.php');
+include('PhpMailSync.class.php');
 if (php_sapi_name()=='cli'){
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
 	$argumentos=getopt(null,$parametros); 
@@ -28,8 +28,8 @@ if (php_sapi_name()=='cli'){
 	$ssl1=(isset($argumentos['ssl1']))? '1' : '0';
 	$ssl2=(isset($argumentos['ssl2']))? '1' : '0';
 	
-	$origem = new Imap($argumentos['host1'],$argumentos['usuario1'],$argumentos['senha1'],$tipo1,$ssl1);
-	$destino= new Imap($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
+	$origem = new PhpMailSync($argumentos['host1'],$argumentos['usuario1'],$argumentos['senha1'],$tipo1,$ssl1);
+	$destino= new PhpMailSync($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
 	
 }else{
         echo 'Este script deve ser executado pela linha de comando';
