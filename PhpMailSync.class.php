@@ -508,7 +508,10 @@ class PhpMailSync{
 				 foreach($MessageIdDestino as $key => $mensagem){
 					if(isset($MessageIdDestino[$key]->message_id)){
 					   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
+					}else{
+					    $mensagensDestino[$key] = "$MessageIdDestino[$key]->subject  $MessageIdDestino[$key]->date $MessageIdDestino[$key]->from $MessageIdDestino[$key]->size";
 					}
+					
 					//Fecha if(isset($MessageIdDestino[$key]
 				}//Fecha foreach
 			}//Fecha if(isset($MessageIdDestino)
@@ -516,22 +519,34 @@ class PhpMailSync{
 				 if(isset($MessageIdOrigem)){
 					  foreach($MessageIdOrigem as $key => $mensagem){
 						if(isset($MessageIdOrigem[$key]->message_id)){
-							if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
-								//Gera Estatistica - tamanhoTotalDeMensagensMigradas
-								$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
-								//Fecha Estatistica 
-								$naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
-							}else{
-							        //Gera Estatistica
-							        $this->totalDeMensagensExistentes++;
-							        //Fecha Estatistica 
-							}
+                                                                if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
+                                                                        //Gera Estatistica - tamanhoTotalDeMensagensMigradas
+                                                                        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
+                                                                        //Fecha Estatistica 
+                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
+                                                                }else{
+
+                                                                        //Gera Estatistica
+                                                                        $this->totalDeMensagensExistentes++;
+                                                                        //Fecha Estatistica 
+                                                                }
 						}else{
-						     //Gera Estatistica ->totalDeMensagensSemCabecalho
-						     $this->totalDeMensagensSemCabecalho++;
-						     //Fecha  Estatistica 
+						            $mensagemOrigem = "$MessageIdOrigem[$key]->subject  $MessageIdOrigem[$key]->date $MessageIdOrigem[$key]->from $MessageIdOrigem[$key]->size";
+						             if (!in_array($mensagemOrigem,$mensagensDestino)){
+                                                                        //Gera Estatistica ->totalDeMensagensSemCabecalho
+                                                                        $this->totalDeMensagensSemCabecalho++;
+                                                                        //Fecha  Estatistica 
+
+                                                                        //Gera Estatistica - tamanhoTotalDeMensagensMigradas
+                                                                        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
+                                                                        //Fecha Estatistica 
+                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
+						             }else{
+						                         //Gera Estatistica
+							                $this->totalDeMensagensExistentes++;
+							                //Fecha Estatistica 
+						             }  
 						}
-						
 					}//Fecha foreach
 				}//Fecha if(isset($MessageIdOrigem)
 			}//Fecha if($mensagensDestino)
