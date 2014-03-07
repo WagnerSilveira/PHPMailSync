@@ -509,7 +509,7 @@ class PhpMailSync{
 					if(isset($MessageIdDestino[$key]->message_id)){
 					   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
 					}else{
-					    $mensagensDestino[$key] = "$MessageIdDestino[$key]->subject  $MessageIdDestino[$key]->date $MessageIdDestino[$key]->from $MessageIdDestino[$key]->size";
+					    $mensagensDestino[$key] = "{$MessageIdDestino[$key]->subject} {$MessageIdDestino[$key]->date} {$MessageIdDestino[$key]->from} {$MessageIdDestino[$key]->size}";
 					}
 					
 					//Fecha if(isset($MessageIdDestino[$key]
@@ -531,7 +531,7 @@ class PhpMailSync{
                                                                         //Fecha Estatistica 
                                                                 }
 						}else{
-						            $mensagemOrigem = "$MessageIdOrigem[$key]->subject  $MessageIdOrigem[$key]->date $MessageIdOrigem[$key]->from $MessageIdOrigem[$key]->size";
+						            $mensagemOrigem = "{$MessageIdOrigem[$key]->subject} {$MessageIdOrigem[$key]->date} {$MessageIdOrigem[$key]->from} {$MessageIdOrigem[$key]->size}";
 						             if (!in_array($mensagemOrigem,$mensagensDestino)){
                                                                         //Gera Estatistica ->totalDeMensagensSemCabecalho
                                                                         $this->totalDeMensagensSemCabecalho++;
