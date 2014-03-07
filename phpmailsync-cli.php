@@ -33,6 +33,7 @@ if (php_sapi_name()=='cli'){
 	
 }else{
         echo 'Este script deve ser executado pela linha de comando';
+        exit();
 }
 
 
