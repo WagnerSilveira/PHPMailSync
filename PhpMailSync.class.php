@@ -412,17 +412,13 @@ class PhpMailSync{
 	        }else{
 				if(preg_match("/INBOX\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/INBOX\\".$this->separador."/","",$pastas);
-						
+						$pastas=$this->prefixo.$pastas;
 						return $pastas;
 				}
 				if(preg_match("/Inbox\\".$this->separador."/",$pastas)){
 						$pastas=@preg_filter("/Inbox\\".$this->separador."/","",$pastas);
+						$pastas=$this->prefixo.$pastas;
 						return $pastas;
-				}
-				if($origem->prefixo != $this->prefixo){
-				     return $this->prefixo.$pastas;
-				}else{
-				     return $pastas;
 				}
 		}
 	}
