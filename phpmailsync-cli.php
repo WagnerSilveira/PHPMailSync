@@ -110,17 +110,16 @@ foreach($origem->listarMailBox() as $mailbox){
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
-				echo "Conexao perdida com o host de origem";	
+				echo "Conexao perdida com o host de origem\n";	
 				exit;
 			}
 			if($destino->keepAlive()){
-				echo "Conexao perdida com o host de destino";
+				echo "Conexao perdida com o host de destino\n";
 				exit;
 			}
 			fwrite($stream,'('.("$key"+1).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
-			 $destino->limparImapCache($origem);
-		
-			//echo $key." -->".$destino->setarFlags($origem,$uid)."\n";	
+			$destino->limparImapCache($origem);
+						
 		}
 	}
 }
