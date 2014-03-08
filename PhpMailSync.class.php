@@ -420,6 +420,7 @@ class PhpMailSync{
 						$pastas=$this->prefixo.$pastas;
 						return $pastas;
 				}
+				return $this->prefixo.$pastas;
 		}
 	}
 	
