@@ -18,7 +18,11 @@
 
 if(extension_loaded('imap')){
 include('PhpMailSync.class.php');
+
+$stream= fopen("php://output",'w');
+
 if (php_sapi_name()=='cli'){
+
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
 	$argumentos=getopt(null,$parametros); 
 		
@@ -32,72 +36,81 @@ if (php_sapi_name()=='cli'){
 	$destino= new PhpMailSync($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
 	
 }else{
-        echo 'Este script deve ser executado pela linha de comando';
+        fwrite($stream,'Este script deve ser executado pela linha de comando'."\n");
         exit();
 }
 
 
 $inicio=date('d/m/Y -- H:i:s');
 if(!$origem->testarConexao()){
-	echo "Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco: $origem->servidor  na porta  $origem->porta \n";
+	fwrite($stream,"Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco: $origem->servidor  na porta  $origem->porta \n");
 	exit;
 }
 if(!$origem->conectar()){
-	echo "Falha de autenticacao no servidor de origem: $origem->servidor com a conta $origem->usuario \n";
+	fwrite($stream,"Falha de autenticacao no servidor de origem: $origem->servidor com a conta $origem->usuario \n");
 	exit;
 }
 if(!$destino->testarConexao()){
-	echo "Nao foi possivel conectar o servidor de destino, o servidor nao respondeu atraves do endereco: $destino->servidor na porta $destino->porta \n";
+	fwrite($stream,"Nao foi possivel conectar o servidor de destino, o servidor nao respondeu atraves do endereco: $destino->servidor na porta $destino->porta \n");
 	exit;
 }
 if(!$destino->conectar()){
-	echo "Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n";
+	fwrite($stream,"Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n");
 	exit;
 }
 
-echo "\n";
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-echo 'Iniciando migracao em '.$inicio."\n";
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-echo "\n";
-echo "--- Informacoes da conta - ORIGEM --- \n";
-echo $origem->verificarInfoQuota();
-echo "Prefixo: ".$origem->verificarPrefixo()."\n";
-echo "Separador: ".$origem->verificarTipoSeparador()."\n";
-echo "--- Informacoes da conta - DESTINO --- \n";
-echo $destino->verificarInfoQuota();
-echo "Prefixo: ".$destino->verificarPrefixo()."\n";
-echo "Separador: ".$destino->verificarTipoSeparador()."\n";
-echo "\n";
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
+fwrite($stream,
+     "\n".
+     '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
+     'Iniciando migracao em '.$inicio."\n".
+     '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
+     "\n"."\n".
+     '--- Informacoes da conta - ORIGEM --- '."\n".
+      $origem->verificarInfoQuota().
+     'Prefixo: '.$origem->verificarPrefixo()."\n".
+     'Separador: '.$origem->verificarTipoSeparador()."\n".
+     '--- Informacoes da conta - DESTINO --- '."\n".
+     $destino->verificarInfoQuota().
+     'Prefixo: '.$destino->verificarPrefixo()."\n".
+     'Separador: '.$destino->verificarTipoSeparador()."\n".
+     "\n".
+     '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n"
+     );
+
 
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
 	     $espaco= $origem->quotaEmUso - $destino->quotaDisponivel;
-		echo " Nao sera possivel iniciar a migracao dos emails \n Sera necessario adicionar mais ".$destino->ajustarMedida($espaco)." de espaco a conta $destino->usuario \n";
-		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-		echo "\n";
+		fwrite($stream,
+		'Nao sera possivel iniciar a migracao dos emails'."\n".
+		'Sera necessario adicionar mais '.$destino->ajustarMedida($espaco).' de espaco a conta '.$destino->usuario."\n".
+		'+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n\n");
 		exit;
 	}
 }
-$stream= fopen("php://output",'w');
+
 $destino->listarMailBox();
 $destino->verificarTipoSeparador();
-echo "\n";
-echo 'Verificando pastas  na conta '.$destino->usuario."\n";
-echo "\n";
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
+fwrite($stream,
+     "\n".
+     'Verificando pastas  na conta '.$destino->usuario."\n".
+     "\n".
+     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n" ); 
+     
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
 	fwrite($stream, $destino->criarMailboxInexistentes($origem,$pastasOrigem));
 	$destino->limparImapCache($origem);
 }
 
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-echo "\n";
-echo 'Buscando por mensagens inexistentes'."\n";
-echo "\n";
-echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
+fwrite($stream,
+     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
+     "\n".
+     'Buscando por mensagens inexistentes'."\n".
+     "\n".
+     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
+     
+     
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
    	fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
