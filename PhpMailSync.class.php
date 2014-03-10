@@ -166,7 +166,6 @@ class PhpMailSync{
 	      }  
      	}
      	
-     	
 	/**
 	*       
 	* Testa se o servidor está online e respondendo na porta apropriada de acordo com seu tipo(IMAP, ou POP) com ou sem SSL.
@@ -213,7 +212,6 @@ class PhpMailSync{
 		return false;
 	}
 	
-	
 	/**
 	*       
 	* Esta função retora um array com a lista de pastas no padrão baixo
@@ -241,7 +239,6 @@ class PhpMailSync{
 		return $this->pastas;	
 	} 
 	
-	
 	/**
 	*      
 	* Esta função retira  as informações do servidor(ou mailbox)  mantendo apenas o nome das pastas.
@@ -262,8 +259,6 @@ class PhpMailSync{
 		$pastas = substr($mailbox,$pos+1);
 		return $pastas;
 	}
-	
-	
 	
 	/**
         * Retorna o prefixo de pastas do servidor IMAP,  mais comuns:  " INBOX. " , "Inbox." , "INBOX/" ou nenhum 
@@ -342,9 +337,6 @@ class PhpMailSync{
 		 }
 	}
 	
-	
-	
-		
 	/**
 	* Esta função retorna o sepadador (ou delimitador) hierárquico de pastas do servidor IMAP, o mais comum pode ser  " / " (barra) ou  " ."(ponto)
         * Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
@@ -361,8 +353,6 @@ class PhpMailSync{
 		return $this->separador;
 	}
 	
-	
-	
 	/**
 	* Função limpa o Cache dos servidores IMAP  de origem e destino    
 	* 
@@ -377,8 +367,6 @@ class PhpMailSync{
 		imap_gc($this->stream, IMAP_GC_ELT | IMAP_GC_ENV | IMAP_GC_TEXTS);
 	}
 	 
-	 
-	
 	/**
 	*  Efetua a formatação das pastas vindas do servidor IMAP de origem de acordo com o padrão das pastas encontradas no servidor IMAP de destino.
 	* Disponivel apenas para servidores IMAP
@@ -424,7 +412,6 @@ class PhpMailSync{
 		}
 	}
 	
-	
 	/**
 	* Esta função efetua a criação das pastas no servidor IMAP de destino e  retorna o status da execução.
 	* Disponivel apenas entre servidores IMAP
@@ -458,9 +445,6 @@ class PhpMailSync{
 		}
 		return "Pasta ja existe: $pastas  \n";
 	}
-	
-	
-	
 	
 	/**
         * Esta função retorna um array unidimencional com as UID das mensagens no servidor IMAP de origem que são Inexistentes no servidor IMAP de destino.
@@ -506,7 +490,7 @@ class PhpMailSync{
 					if(isset($MessageIdDestino[$key]->message_id)){
 					   $mensagensDestino[$key] = $MessageIdDestino[$key]->message_id;
 					}else{
-					    $mensagensDestino[$key] = "{$MessageIdDestino[$key]->subject} {$MessageIdDestino[$key]->date} {$MessageIdDestino[$key]->from} {$MessageIdDestino[$key]->size}";
+					    $mensagensDestino[$key] = $MessageIdDestino[$key]->subject.' '. $MessageIdDestino[$key]->date;
 					}
 					
 					//Fecha if(isset($MessageIdDestino[$key]
@@ -528,7 +512,7 @@ class PhpMailSync{
                                                                         //Fecha Estatistica 
                                                                 }
 						}else{
-						            $mensagemOrigem = "{$MessageIdOrigem[$key]->subject} {$MessageIdOrigem[$key]->date} {$MessageIdOrigem[$key]->from} {$MessageIdOrigem[$key]->size}";
+						            $mensagemOrigem = $MessageIdOrigem[$key]->subject.' '. $MessageIdOrigem[$key]->date;
 						             if (!in_array($mensagemOrigem,$mensagensDestino)){
                                                                         //Gera Estatistica ->totalDeMensagensSemCabecalho
                                                                         $this->totalDeMensagensSemCabecalho++;
@@ -537,7 +521,8 @@ class PhpMailSync{
                                                                         //Gera Estatistica - tamanhoTotalDeMensagensMigradas
                                                                         $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
                                                                         //Fecha Estatistica 
-                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
+                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+                                                                        	 
 						             }else{
 						                         //Gera Estatistica
 							                $this->totalDeMensagensExistentes++;
@@ -562,8 +547,6 @@ class PhpMailSync{
 		}
 		return $naoexistentes;
 	}	
-	
-	
 	
 	/**
 	* Disponivel apenas para servidores IMAP
@@ -615,18 +598,15 @@ class PhpMailSync{
 				//Fecha Estatistica
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
 				
-				return "Origem: Mensagem_UID=$uid >>> Destino: Mensagem_UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." Flags: $flags \n";
+				return "Origem: Mensagem UID=$uid >>> Destino: Mensagem UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." Flags: $flags \n";
 		}else{
 			//Gera Estatistica -> totalDeMensagensNaoMigradas
 				$this->totalDeMensagensNaoMigradas++;
 			//Fecha Estatistica
 				$erros = imap_errors();
-				return "Mensagem UID -$uid nao pode ser migrada --> ".$erros[0]."\n";
+				return "Erro: Mensagem UID=$uid nao pode ser migrada --> ".$erros[0]."\n";
 		}
 	}
-	
-	
-	
 	
 	/**
 	* Retorna as Flags de uma mensagem no servidor IMAP de origem para ser inserida posteriormente na mesma mensagem no servidor  IMAP de destino.
@@ -659,12 +639,10 @@ class PhpMailSync{
 			$flags.=' \\Draft';
 		}
 		if(!imap_setflag_full($this->stream,$uidDestino,$flags,ST_UID)){
-			echo 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
+			return 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
 		}
 		return $flags;
 	}
-	
-	
 	
 	/**
 	*
@@ -681,7 +659,6 @@ class PhpMailSync{
 		return $totalMsgs;
 	}
 	
-	
 	/**
 	* Ajusta a medida recebida  em bytes e retorna os valores possiveis em  bytes, kilobytes, megabytes ou gigabytes
 	*
@@ -695,7 +672,6 @@ class PhpMailSync{
 		$medidaEmKB= $medidaEmBytes/1024;
 		return $this->ajustarMedida($medidaEmKB);
 	}
-	
 	
 	/**
 	*       
@@ -725,7 +701,6 @@ class PhpMailSync{
 		}    
 	}
 	
-	
 	/**
 	*       
 	*  Insere a quota total (utilizado e disponivel) da conta no atributo $quota 
@@ -741,8 +716,6 @@ class PhpMailSync{
 	public function receberInfoQuotaTotal(){
 		$this->quota = imap_get_quotaroot($this->stream, "INBOX");
 	}
-	
-	
 	
 	/**
 	*       
@@ -819,11 +792,12 @@ class PhpMailSync{
 	*/
     	public function verificarInfoQuota(){
 		$this->receberInfoQuotaTotal();
-		 return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
-		 "\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
-		 "\n".'DISPONIVEL: '.$this->ajustarMedida($this->verificarQuotaDisponivel()).
-		 "\n".'TOTAL: '.$this->ajustarMedida($this->verificarQuotaTotal())."\n"
+		return ('USO: '.$this->ajustarMedida($this->verificarQuotaDeUso()).
+		"\n".'PORCENTAGEM DE USO: '.$this->verificarPorgentagemDeUso().
+		"\n".'DISPONIVEL: '.$this->ajustarMedida($this->verificarQuotaDisponivel()).
+		"\n".'TOTAL: '.$this->ajustarMedida($this->verificarQuotaTotal())."\n"
 		 );
+
     	}
 	
 	
