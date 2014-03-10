@@ -68,4 +68,4 @@ ___
 #####Download
 
 1.0v: https://www.dropbox.com/sh/zegphwngimxfjak/ZIcSYKeOel
-
+Ultima atualização: https://www.dropbox.com/s/z2pgj2qtw07ivfa/phpmailsync-cli.phar
