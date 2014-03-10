@@ -7,7 +7,7 @@ PHPMailSync
 Esta aplicação pode ser utilizada em qualquer servidor ou máquina que possua o interpretador PHP 5.3 ou superior instalado e com a extensão IMAP ativa .
 
 A execução dele no momento é apenas por linha de comando. 
-Pode ser baixado o arquivo .phar com os arquivos imap.controle.php e Imap.class.php incluso para executar, sem instalação necessária.
+Pode ser baixado o arquivo <a href='https://www.dropbox.com/s/z2pgj2qtw07ivfa/phpmailsync-cli.phar'>phpmailsync-cli.phar</a> com os arquivos phpmailsync-cli.php e PhpMailSync.class.php incluso para executar, sem instalação necessária.
 ___
 
 #####Requisitos
@@ -68,4 +68,5 @@ ___
 #####Download
 
 1.0v: https://www.dropbox.com/sh/zegphwngimxfjak/ZIcSYKeOel
+
 Ultima atualização: https://www.dropbox.com/s/z2pgj2qtw07ivfa/phpmailsync-cli.phar
