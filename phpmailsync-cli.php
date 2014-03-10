@@ -114,37 +114,38 @@ fwrite($stream,
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
    	fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
-
+        
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
-		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
-		echo "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes		      \n";
-		echo '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n";
+		fwrite($stream,  '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
+	         "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes \n".
+		 '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
-				echo "Conexao perdida com o host de origem\n";	
+				fwrite($stream, "Conexao perdida com o host de origem\n");	
 				exit;
 			}
 			if($destino->keepAlive()){
-				echo "Conexao perdida com o host de destino\n";
+				fwrite($stream,"Conexao perdida com o host de destino\n");
 				exit;
 			}
-			fwrite($stream,'('.("$key"+1).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
+			fwrite($stream,'('.(--$msgsNaoExistentes).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
 			$destino->limparImapCache($origem);
 						
 		}
 	}
 }
-echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
-echo "\n";
-echo "ESTATISTICAS\n";
-echo $destino->gerarEstatisticas()."\n";
-echo "Migracao iniciada em:  $inicio \n";
-echo "Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n";
-echo "\n";
-echo "++++++++++++++++++++++++++++++++++++++++++++++ \n";
+fwrite($stream,
+ "++++++++++++++++++++++++++++++++++++++++++++++ \n".
+"\n".
+"ESTATISTICAS\n".
+$destino->gerarEstatisticas()."\n".
+"Migracao iniciada em:  $inicio \n".
+"Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n".
+"\n".
+"++++++++++++++++++++++++++++++++++++++++++++++ \n");
 }else{
-  echo "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador";
+ fwrite($stream, "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador");
 }
 ?>  
