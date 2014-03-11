@@ -16,29 +16,73 @@
  *
  */
 
+
+
+/**
+*     Captura logs  e coloca no arquivo phpmailsync_erros.log na pasta temporaria do servidor
+*/
+ini_set("log_errors", 1); 
+ini_set( 'error_log', sys_get_temp_dir().'/phpmailsync_erros.log' );
+/*
+
+*/
+
+
+
 if(extension_loaded('imap')){
 include('PhpMailSync.class.php');
 if (php_sapi_name()=='cli'){
-
+ 
+        /**
+	*
+	*       Recebe os parametros vindos da linha de comando 
+	*       
+        *       Obrigatorios: 
+	*       --host1 
+	*       --usuario1
+	*       --senha1
+	*       --tipo1
+	*       --ssl1 
+	*
+	*       --host2
+	*       --usuario2
+	*       --senha2
+	*       --tipo2
+	*       --ssl2
+	*
+	*       Opcionais
+	*       --ignorarespaco
+	*/
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
 	$argumentos=getopt(null,$parametros); 
-		
 	$tipo1=(!isset($argumentos['tipo1']))? 'imap' :$argumentos['tipo1'];
 	$tipo2=(!isset($argumentos['tipo2']))? 'imap' :$argumentos['tipo2'];
-	
 	$ssl1=(isset($argumentos['ssl1']))? '1' : '0';
 	$ssl2=(isset($argumentos['ssl2']))? '1' : '0';
 	
+	
+	/**
+	*
+	*
+	*       Testas se os parametros obrigatórios foram passados
+	*/
 	if(!isset($argumentos['host1'])){echo "Parametro obrigatorio  --host1  nao informado\n"; exit;}
 	if(!isset($argumentos['usuario1'])){echo "Parametro obrigatorio  --usuario1  nao informado\n"; exit;}
 	if(!isset($argumentos['senha1'])){echo "Parametro obrigatorio  --senha1  nao informado\n"; exit;}
 	if(!isset($argumentos['host2'])){echo "Parametro obrigatorio  --host2  nao informado\n"; exit;}
 	if(!isset($argumentos['usuario2'])){echo "Parametro obrigatorio  --usuario2  nao informado\n"; exit;}
 	if(!isset($argumentos['senha2'])){echo "Parametro obrigatorio  --senha2  nao informado\n"; exit;}
-
+	
+	/**
+	*
+	*
+	*       Instancia a classe PhpMailSync para 
+	*/
 	$origem = new PhpMailSync($argumentos['host1'],$argumentos['usuario1'],$argumentos['senha1'],$tipo1,$ssl1);
 	$destino= new PhpMailSync($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
-	
+	declare(ticks = 1); 
+
+
 }else{
   echo  'Este script deve ser executado pela linha de comando'."\n";
         exit();
@@ -63,6 +107,26 @@ if(!$destino->conectar()){
 	exit;
 }
 
+pcntl_signal(SIGINT, function ($signal) { 
+echo  "\n Finalizado pelo Usuario".PHP_EOL; 
+exit;
+}); 
+
+pcntl_signal(SIGTERM, function ($signal) { 
+echo  "\n Finalizado pelo Terminal".PHP_EOL; 
+exit;
+}); 
+
+pcntl_signal(SIGSTP, function ($signal) { 
+echo  "\n Processo Pausado".PHP_EOL; 
+
+}); 
+
+pcntl_signal(SIGCONT, function ($signal) { 
+echo  "\n Processo Reeiniciado".PHP_EOL; 
+
+}); 
+ 
 echo( 
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
@@ -80,7 +144,6 @@ echo(
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n"
      );
-
 
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
