@@ -18,9 +18,6 @@
 
 if(extension_loaded('imap')){
 include('PhpMailSync.class.php');
-
-$stream= fopen("php://output",'w');
-
 if (php_sapi_name()=='cli'){
 
 	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
@@ -32,34 +29,41 @@ if (php_sapi_name()=='cli'){
 	$ssl1=(isset($argumentos['ssl1']))? '1' : '0';
 	$ssl2=(isset($argumentos['ssl2']))? '1' : '0';
 	
+	if(!isset($argumentos['host1'])){echo "Parametro obrigatorio  --host1  nao informado\n"; exit;}
+	if(!isset($argumentos['usuario1'])){echo "Parametro obrigatorio  --usuario1  nao informado\n"; exit;}
+	if(!isset($argumentos['senha1'])){echo "Parametro obrigatorio  --senha1  nao informado\n"; exit;}
+	if(!isset($argumentos['host2'])){echo "Parametro obrigatorio  --host2  nao informado\n"; exit;}
+	if(!isset($argumentos['usuario2'])){echo "Parametro obrigatorio  --usuario2  nao informado\n"; exit;}
+	if(!isset($argumentos['senha2'])){echo "Parametro obrigatorio  --senha2  nao informado\n"; exit;}
+
 	$origem = new PhpMailSync($argumentos['host1'],$argumentos['usuario1'],$argumentos['senha1'],$tipo1,$ssl1);
 	$destino= new PhpMailSync($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
 	
 }else{
-        fwrite($stream,'Este script deve ser executado pela linha de comando'."\n");
+  echo  'Este script deve ser executado pela linha de comando'."\n";
         exit();
 }
 
 
 $inicio=date('d/m/Y -- H:i:s');
 if(!$origem->testarConexao()){
-	fwrite($stream,"Nao foi possivel conectar o servidor de origem, o servidor nao respondeu atraves do endereco: $origem->servidor  na porta  $origem->porta \n");
+	echo( "Nao foi possivel conectar o servidor de origem , o servidor nao respondeu atraves do endereco: $origem->servidor  na porta  $origem->porta \n");
 	exit;
 }
 if(!$origem->conectar()){
-	fwrite($stream,"Falha de autenticacao no servidor de origem: $origem->servidor com a conta $origem->usuario \n");
+	echo( "Falha de autenticacao no servidor de origem: $origem->servidor com a conta $origem->usuario \n");
 	exit;
 }
 if(!$destino->testarConexao()){
-	fwrite($stream,"Nao foi possivel conectar o servidor de destino, o servidor nao respondeu atraves do endereco: $destino->servidor na porta $destino->porta \n");
+	echo( "Nao foi possivel conectar o servidor de destino, o servidor nao respondeu atraves do endereco: $destino->servidor na porta $destino->porta \n");
 	exit;
 }
 if(!$destino->conectar()){
-	fwrite($stream,"Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n");
+	echo( "Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n");
 	exit;
 }
 
-fwrite($stream,
+echo( 
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
      'Iniciando migracao em '.$inicio."\n".
@@ -81,7 +85,7 @@ fwrite($stream,
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
 	     $espaco= $origem->quotaEmUso - $destino->quotaDisponivel;
-		fwrite($stream,
+		echo( 
 		'Nao sera possivel iniciar a migracao dos emails'."\n".
 		'Sera necessario adicionar mais '.$destino->ajustarMedida($espaco).' de espaco a conta '.$destino->usuario."\n".
 		'+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n\n");
@@ -91,7 +95,7 @@ if(!isset($argumentos['ignorarespaco'])){
 
 $destino->listarMailBox();
 $destino->verificarTipoSeparador();
-fwrite($stream,
+echo( 
      "\n".
      'Verificando pastas  na conta '.$destino->usuario."\n".
      "\n".
@@ -99,11 +103,11 @@ fwrite($stream,
      
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-	fwrite($stream, $destino->criarMailboxInexistentes($origem,$pastasOrigem));
+	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
 	$destino->limparImapCache($origem);
 }
 
-fwrite($stream,
+echo( 
      '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
      "\n".
      'Buscando por mensagens inexistentes'."\n".
@@ -113,30 +117,30 @@ fwrite($stream,
      
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-   	fwrite($stream, "Verificando conteudo na pasta $pastasOrigem \n");
+   	echo(  "Verificando conteudo na pasta $pastasOrigem \n");
         
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
-		fwrite($stream,  '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
+		echo(   '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
 	         "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes \n".
 		 '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
-				fwrite($stream, "Conexao perdida com o host de origem\n");	
+				echo(  "Conexao perdida com o host de origem\n");	
 				exit;
 			}
 			if($destino->keepAlive()){
-				fwrite($stream,"Conexao perdida com o host de destino\n");
+				echo( "Conexao perdida com o host de destino\n");
 				exit;
 			}
-			fwrite($stream,'('.(--$msgsNaoExistentes).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
+			echo( '('.(--$msgsNaoExistentes).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
 			$destino->limparImapCache($origem);
 						
 		}
 	}
 }
-fwrite($stream,
+echo( 
  "++++++++++++++++++++++++++++++++++++++++++++++ \n".
 "\n".
 "ESTATISTICAS\n".
@@ -146,6 +150,7 @@ $destino->gerarEstatisticas()."\n".
 "\n".
 "++++++++++++++++++++++++++++++++++++++++++++++ \n");
 }else{
- fwrite($stream, "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador");
+        echo(  "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador");
+        exit;
 }
 ?>  

@@ -492,14 +492,17 @@ class PhpMailSync{
 					}else{
 					    $mensagensDestino[$key] = $MessageIdDestino[$key]->subject.' '. $MessageIdDestino[$key]->date;
 					}
-					
-					//Fecha if(isset($MessageIdDestino[$key]
-				}//Fecha foreach
-			}//Fecha if(isset($MessageIdDestino)
+				}
+			}
+			
 			if($mensagensDestino){
 				 if(isset($MessageIdOrigem)){
 					  foreach($MessageIdOrigem as $key => $mensagem){
+						
+						
 						if(isset($MessageIdOrigem[$key]->message_id)){
+						                /*Migra mensagems que possuem Message-ID*/        
+						                
                                                                 if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
                                                                         //Gera Estatistica - tamanhoTotalDeMensagensMigradas
                                                                         $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
@@ -512,6 +515,8 @@ class PhpMailSync{
                                                                         //Fecha Estatistica 
                                                                 }
 						}else{
+						                /*Migra mensagems Sem Message-ID*/  
+						                
 						            $mensagemOrigem = $MessageIdOrigem[$key]->subject.' '. $MessageIdOrigem[$key]->date;
 						             if (!in_array($mensagemOrigem,$mensagensDestino)){
                                                                         //Gera Estatistica ->totalDeMensagensSemCabecalho
@@ -527,19 +532,19 @@ class PhpMailSync{
 						                         //Gera Estatistica
 							                $this->totalDeMensagensExistentes++;
 							                //Fecha Estatistica 
-						             }  
+					                   }  
 						}
-					}//Fecha foreach
-				}//Fecha if(isset($MessageIdOrigem)
-			}//Fecha if($mensagensDestino)
+					}
+				}
+			}
 		}else{
-		     if(isset($MessageIdOrigem)){
-			     foreach($MessageIdOrigem as $key => $mensagem){
-				$this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    			
-				$naoexistentes[] = $MessageIdOrigem[$key]->uid;
-			    }//Fecha Foreach
-			}//Fecha if(isset...
-		}//Fecha else
+		             if(isset($MessageIdOrigem)){
+			             foreach($MessageIdOrigem as $key => $mensagem){
+				        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    			
+				        $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+			            }
+			     }
+		}
 		
 		$msgsNaoExistentes= count($naoexistentes);
 		if($msgsNaoExistentes >=1){
