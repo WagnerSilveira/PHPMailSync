@@ -428,7 +428,7 @@ class PhpMailSync{
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
 		if(!array_search($this->mbox.$pastas,$this->pastas)){
-			$pastas =imap_utf7_decode($pastas);
+			$pastas =imap_utf8($pastas);
 			if(imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
 				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
 					return "Falha na inscricao da pasta: $pastas"."\n";
