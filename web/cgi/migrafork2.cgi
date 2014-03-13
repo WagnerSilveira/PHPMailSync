@@ -7,7 +7,6 @@ include('../classes/Smtp.class.php');
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
          $dados = $_SESSION["dados"];
         unset($_SESSION["dados"]);
-        $ppid= getmypid();
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         foreach($dados as $key => $processos){
         $processos  =  explode(";", $processos);
@@ -19,36 +18,19 @@ include('../classes/Smtp.class.php');
                         $conta=  $processos[7];
                         $pid=getmypid();
                         $status=1;
-                        $logs =$processos[11]."[".uniqid()."].log";
-                        function sig_handler($signo){
-                                switch ($signo) {
-                                        case SIGTERM:
-                                        exit;
-                                        break;
-                                        case SIGHUP:
-                                        break;
-                                        case SIGUSR1:
-                                        break;
-                                        default:
-                                }
-                        }
-                        pcntl_signal(SIGTERM, "sig_handler");
-                        pcntl_signal(SIGHUP,  "sig_handler");
-                        pcntl_signal(SIGUSR1, "sig_handler");
-                                            
-                        
+                        $logs =$processos[11]."[".uniqid()."].log";                                         
                        /*****************************************************************************/ 
                         $phpmailsyncDao =  new phpmailsyncDao();
-		        $phpmailsyncDao->iniciarExecucao($conta,$ppid,$pid,$status,$logs,$idmigracao);
+		        $phpmailsyncDao->iniciarExecucao($conta,$pid,$status,$log,$idmigracao);
 		        unset($phpmailsyncDao);
 
 		        /*****************************************************************************/
-		                sleep(220);
+		          sleep(40);
 		        /*****************************************************************************/
 		           $phpmailsyncDao =  new phpmailsyncDao();
                            $phpmailsyncDao->atualizarStatus($pid,$idmigracao);
                            $valor = $phpmailsyncDao->verificarStatusGeral($idmigracao);
-                         if($valor == 0){
+                           if($valor == 0){
                                $phpmailsyncDao->atualizarStatusGeral($idmigracao);
                           } 
                         /*****************************************************************************/

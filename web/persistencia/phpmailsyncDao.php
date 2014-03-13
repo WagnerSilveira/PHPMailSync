@@ -10,40 +10,54 @@ class phpmailsyncDao {
 		 self::$conexao = Conexao::conectarBase();
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static function inserirDados($idmigracao,$host1,$ssl1,$tipo1,$host2,$ssl2,$tipo2,$contas,$status){ 
+	public static function novaMigracao($idmigracao,$status,$tipodemigracao){ 
 		  try{
-			
-			  $query ="INSERT INTO phpmailsync(idmigracao,host1,ssl1,tipo1,host2,ssl2,tipo2,contas,status)VALUES(?,?,?,?,?,?,?,?,?)";
+			  $query ="INSERT INTO phpmailsync(idmigracao,status,tipodemigracao)VALUES(?,?,?)";
 			  $stat = self::$conexao->prepare($query);
 			  $stat->bindValue(1,$idmigracao);
-			  $stat->bindValue(2,$host1);
-			  $stat->bindValue(3,$ssl1);
-			  $stat->bindValue(4,$tipo1);
-			  $stat->bindValue(5,$host2);
-			  $stat->bindValue(6,$ssl2);
-			  $stat->bindValue(7,$tipo2);
-			  $stat->bindValue(8,$contas);
-			  $stat->bindValue(9,$status);
+			  $stat->bindValue(2,$status);
+			  $stat->bindValue(3,$tipodemigracao);
 			  $stat->execute();
 			   self::$conexao = null;
 			   return true;		
-			
 		     }catch(PDOException $e){
 			   return false;
 		     }
      	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	public static function iniciarExecucao($conta,$ppid,$pid,$status,$logs,$idmigracao){ 
+	public static function novoAgendamento($host1,$ssl1,$tipo1,$host2,$ssl2,$tipo2,$contas,$data,$hora,$status,$idmigracao){ 
+		  try{
+			  $query ="INSERT INTO  phpmailsync_agendamento(host1,ssl1,tipo1,host2,ssl2,tipo2,contas,data,hora,status,idmigracao)VALUES(?,?,?,?,?,?,?,?,?,?,?)";
+			  $stat = self::$conexao->prepare($query);
+			  $stat->bindValue(1,$host1);
+			  $stat->bindValue(2,$ssl1);
+			  $stat->bindValue(3,$tipo1);
+			  $stat->bindValue(4,$host2);
+			  $stat->bindValue(5,$ssl2);
+			  $stat->bindValue(6,$tipo2);
+			  $stat->bindValue(7,$contas);
+			  $stat->bindValue(8,$data);
+			  $stat->bindValue(9,$hora);
+			  $stat->bindValue(10,$status);
+			  $stat->bindValue(11,$idmigracao);
+			  $stat->execute();
+			   self::$conexao = null;
+			   return true;		
+		     }catch(PDOException $e){
+			   return false;
+		     }
+     	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	public static function iniciarExecucao($conta,$pid,$status,$log,$idmigracao){ 
 		  try{
 			
-			  $query ="INSERT INTO phpmailsync_execucao(conta,ppid,pid,status,inicio,logs,idmigracao)VALUES(?,?,?,?,NOW(),?,?)";
+			  $query ="INSERT INTO phpmailsync_execucao(conta,pid,status,inicio,log,idmigracao)VALUES(?,?,?,NOW(),?,?)";
 			  $stat = self::$conexao->prepare($query);
 			  $stat->bindValue(1,$conta);
-			  $stat->bindValue(2,$ppid);
-			  $stat->bindValue(3,$pid);
-			  $stat->bindValue(4,$status);
-			  $stat->bindValue(5,$logs);
-			  $stat->bindValue(6,$idmigracao);
+			  $stat->bindValue(2,$pid);
+			  $stat->bindValue(3,$status);
+			  $stat->bindValue(4,$log);
+			  $stat->bindValue(5,$idmigracao);
 			  $stat->execute();
 			   self::$conexao = null;
 			   return true;		
@@ -51,8 +65,7 @@ class phpmailsyncDao {
 		     }catch(PDOException $e){
 			   return 'Erro ao Inserir Dados de execução';
 		     }
-     	}
-     	 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+     	} 	 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
      	  public function atualizarStatus($pid,$idmigracao){
 		try{
 			$query = "UPDATE  phpmailsync_execucao SET phpmailsync_execucao.status='0' , phpmailsync_execucao.fim=NOW() WHERE phpmailsync_execucao.pid= :pid AND phpmailsync_execucao.idmigracao= :idmigracao";

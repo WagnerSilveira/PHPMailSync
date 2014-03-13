@@ -60,9 +60,22 @@ include('../persistencia/phpmailsyncDao.php');
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if(count($erros)==0){
 			$_SESSION["dados"] = Validacao::removerArraysDuplicados($dados);
-			$phpmailsyncDao =  new phpmailsyncDao();
-			if($phpmailsyncDao->inserirDados($idmigracao,$host1,$ssl1,$tipo1,$host2,$ssl2,$tipo2,$contas,1)){				
-				header("Location: ../cgi/migrafork2.cgi");
+			
+			
+			if($_POST['tipo'] == 'agendamento' ){
+			         $data=$_POST['data'];
+			         $hora = $_POST['hora'];
+			         $status='3';
+			         $phpmailsyncDao =  new phpmailsyncDao();
+			         $phpmailsyncDao->novaMigracao($idmigracao,2,"Agendamento");
+			         $phpmailsyncDao =  new phpmailsyncDao();
+			         $phpmailsyncDao->novoAgendamento($host1,$ssl1,$tipo1,$host2,$ssl2,$tipo2,$contas,$data,$hora,$status,$idmigracao);
+			        echo "Migração agendada para o dia $data as $hora horas";
+			}else{
+			        $phpmailsyncDao =  new phpmailsyncDao();
+			        if($phpmailsyncDao->novaMigracao($idmigracao,1,"Manual")){				
+				        header("Location: ../cgi/migrafork2.cgi");
+			        }
 			}
 		}else{
 				var_dump($erros);

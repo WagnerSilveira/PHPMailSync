@@ -37,6 +37,24 @@ http://pleac.sourceforge.net/pleac_php/
 							 }
 						 })
 					})
+				        $( "#agendar" ).click(
+				                function() {
+						        $.ajax({
+							        type: "POST",
+							        url: "controle/validador.php",
+							        data: $('form[name="migracao"]').serialize(),
+							
+							        statusCode: {
+							              200: function(data) {
+							              		 $("#ajaxResponse").html(data);
+									           // if(confirm(data)){
+           										//	 window.location.reload(); 
+           	   									//}		
+
+								        }
+							         }
+						 })
+                                         })
 				});
 		</script>
 	</head>
@@ -72,8 +90,76 @@ http://pleac.sourceforge.net/pleac_php/
 				<!-- Dados para o host de destino --> 
 				<textarea name='contas' style="margin: 2px; height: 258px; width: 554px" placeholder='conta@dominio;senhaorigem;conta@dominio;senhadestino<Enter> ' ><?php if(isset($_SESSION['contas'] )){ echo  $_SESSION['contas'];}?></textarea>
 				<br/>
-				<input type='button' id='migrar'   value="Migrar" />
 				
+				<input type='button' id='migrar' value="Iniciar Migracao" /> 
+			        <select name='tipo' id='tipo'>
+                                  <option value="manual">Migração Manual</option>
+                                  <option value="agendamento">Agendamento</option>
+                                </select>
+                                <br/>
+                                <div id='configAgendamento' style='display: none;'>
+                                        <label>Agendamento de Migracao--> </label>
+                                         <label> Data: </label>
+                                        <select name='data' >
+                                                       <?php
+                                                       for($i=1;$i<=31;$i++){
+                                                        
+                                                                 if($i<10){
+                                                                        echo "<option value='0$i'>0$i</option> \n";
+                                                                  }else{
+                                                                        echo "<option value='$i'>$i</option> \n";
+                                                                  }
+                                                  
+                                                        } 
+                                                        ?>
+                                        </select>
+                                        
+                                        <label> Hora: </label>
+                                        <select name='hora' >
+                                                       <?php
+                                                       for($i=0;$i<=23;$i++){
+                                                        
+                                                                 if($i<10){
+                                                                        echo "<option value='0$i'>0$i h 00</option> \n";
+                                                                  }else{
+                                                                        echo "<option value='$i'>$i h 00</option> \n";
+                                                                  }
+                                                  
+                                                        } 
+                                                        ?>
+                                        </select>
+                                        
+                                </div>
+                                <script>
+                                        
+                                                $( "#tipo" ).change(function() {
+                                                  
+                                                  var tipo = $( "#tipo option:selected").val();
+                                                  
+                                                  if (tipo == 'agendamento') {
+		                                          $('#configAgendamento').show();
+	                                            }else{
+	                                                 $('#configAgendamento').hide();
+	                                            } 
+                                                });
+                                                
+                                                
+                                                   $( "#tipo" ).change(function() {
+                                                  
+                                                  var tipo = $( "#tipo option:selected").val();
+                                                  
+                                                  if (tipo == 'agendamento') {
+                                                  
+		                                          $('#migrar').val('Agendar Migracao');
+	                                            }else{
+	                                                   $('#migrar').val('Iniciar Migracao');
+	                                            } 
+                                                });
+                                        
+                                </script>
+                                
+                                
+                                
 			</form>
 			
 		</section>

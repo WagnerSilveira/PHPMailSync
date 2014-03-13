@@ -81,7 +81,7 @@ if (php_sapi_name()=='cli'){
 	*/
 	$origem = new PhpMailSync($argumentos['host1'],$argumentos['usuario1'],$argumentos['senha1'],$tipo1,$ssl1);
 	$destino= new PhpMailSync($argumentos['host2'],$argumentos['usuario2'],$argumentos['senha2'],$tipo2,$ssl2);
-	declare(ticks = 1); 
+	
 
 
 }else{
@@ -108,7 +108,9 @@ if(!$destino->conectar()){
 	exit;
 }
 
+declare(ticks = 1); 
 if(function_exists("pcntl_signal")){
+
 	pcntl_signal(SIGINT, function ($signal) { 
 	echo  "\n Finalizado pelo Usuario".PHP_EOL; 
 	exit;
@@ -116,11 +118,14 @@ if(function_exists("pcntl_signal")){
 
 	pcntl_signal(SIGTERM, function ($signal) { 
 	echo  "\n Finalizado pelo Terminal".PHP_EOL; 
+	
 	exit;
 	}); 
 
-	pcntl_signal(SIGSTOP, function ($signal) { 
+	pcntl_signal(SIGTSTP, function ($signal) { 
 	echo  "\n Processo Pausado".PHP_EOL; 
+	posix_kill(getmypid(),SIGSTOP);
+
 	}); 
 
 	pcntl_signal(SIGCONT, function ($signal) { 
@@ -186,8 +191,8 @@ foreach($origem->listarMailBox() as $mailbox){
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
 		echo(   '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
-	         "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes \n".
-		 '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
+	                     "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes \n".
+		              '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
