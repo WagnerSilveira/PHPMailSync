@@ -1,3 +1,4 @@
+#!/usr/bin/php
 <?php
 /*
  * Direitos Autorais (C) 2014 Wagner Hahn Silveira.
@@ -107,26 +108,26 @@ if(!$destino->conectar()){
 	exit;
 }
 
-pcntl_signal(SIGINT, function ($signal) { 
-echo  "\n Finalizado pelo Usuario".PHP_EOL; 
-exit;
-}); 
+if(function_exists("pcntl_signal")){
+	pcntl_signal(SIGINT, function ($signal) { 
+	echo  "\n Finalizado pelo Usuario".PHP_EOL; 
+	exit;
+	}); 
 
-pcntl_signal(SIGTERM, function ($signal) { 
-echo  "\n Finalizado pelo Terminal".PHP_EOL; 
-exit;
-}); 
+	pcntl_signal(SIGTERM, function ($signal) { 
+	echo  "\n Finalizado pelo Terminal".PHP_EOL; 
+	exit;
+	}); 
 
-pcntl_signal(SIGSTP, function ($signal) { 
-echo  "\n Processo Pausado".PHP_EOL; 
+	pcntl_signal(SIGSTOP, function ($signal) { 
+	echo  "\n Processo Pausado".PHP_EOL; 
+	}); 
 
-}); 
+	pcntl_signal(SIGCONT, function ($signal) { 
+	echo  "\n Processo Reeiniciado".PHP_EOL; 
+	}); 
+}
 
-pcntl_signal(SIGCONT, function ($signal) { 
-echo  "\n Processo Reeiniciado".PHP_EOL; 
-
-}); 
- 
 echo( 
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
