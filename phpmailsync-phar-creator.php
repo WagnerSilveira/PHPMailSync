@@ -19,7 +19,7 @@ $p = new Phar('phpmailsync-cli.phar');
 $p->startBuffering();
 $p->addFile('PhpMailSync.class.php');
 $p->addFile('phpmailsync-cli.php');
-$p->setStub($p->createDefaultStub('phpmailsync-cli.php'));
+$p->setStub("#!/usr/bin/php \n".$p->createDefaultStub('phpmailsync-cli.php'));
 $p->stopBuffering();
 
 ?>

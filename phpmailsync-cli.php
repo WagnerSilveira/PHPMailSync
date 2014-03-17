@@ -1,4 +1,3 @@
-#!/usr/bin/php
 <?php
 /*
  * Direitos Autorais (C) 2014 Wagner Hahn Silveira.
