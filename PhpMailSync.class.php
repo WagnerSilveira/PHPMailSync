@@ -665,6 +665,25 @@ class PhpMailSync{
 	}
 	
 	/**
+	*
+	* Retorna a lista de pastas com a quantidade de mensagens
+	*
+	* @since        Mar 19 2014
+	* @license      http://www.gnu.org/licenses/gpl-2.0.html 
+	* @return string  
+	*/
+	public function listarInfoPorPasta(){
+	     $pasta = "";
+	     foreach($this->listarMailBox() as $pastas){
+	          $pasta .= "Pasta: ".$this->listarPastas($pastas)." -> Nº de mensagens: ".$this->listarTotalMensagensPorMailbox($this->listarPastas($pastas))."\n"; 
+	     }
+	     return $pasta;
+	
+	}
+	
+	
+	
+	/**
 	* Ajusta a medida recebida  em bytes e retorna os valores possiveis em  bytes, kilobytes, megabytes ou gigabytes
 	*
 	*

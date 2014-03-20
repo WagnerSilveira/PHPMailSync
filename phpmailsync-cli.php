@@ -212,6 +212,12 @@ echo(
  "++++++++++++++++++++++++++++++++++++++++++++++ \n".
 "\n".
 "ESTATISTICAS\n".
+"Listagem de pastas e quantidade de mensagens \n".
+"+++++ Pastas na origem ++++++ \n".
+$origem->listarInfoPorPasta().
+"+++++ Pastas no destino ++++++ \n".
+$destino->listarInfoPorPasta().
+"--------------------------------------------\n".
 $destino->gerarEstatisticas()."\n".
 "Migracao iniciada em:  $inicio \n".
 "Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n".
