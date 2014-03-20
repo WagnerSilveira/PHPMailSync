@@ -53,12 +53,38 @@ if (php_sapi_name()=='cli'){
 	*       Opcionais
 	*       --ignorarespaco
 	*/
-	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::');
+	$parametros= array('host1:','usuario1:','senha1:','tipo1:','ssl1::','host2:','usuario2:','senha2:','tipo2:','ssl2::','ignorarespaco::','help');
 	$argumentos=getopt(null,$parametros); 
 	$tipo1=(!isset($argumentos['tipo1']))? 'imap' :$argumentos['tipo1'];
 	$tipo2=(!isset($argumentos['tipo2']))? 'imap' :$argumentos['tipo2'];
 	$ssl1=(isset($argumentos['ssl1']))? '1' : '0';
 	$ssl2=(isset($argumentos['ssl2']))? '1' : '0';
+	if(isset($argumentos['h']) || isset($argumentos['help'])){
+echo "\n++++ AJUDA PHPMailSync ++++ \n
+Repositorio: https://github.com/wagner852/PHPMailSync \n
+=== Parametros Origem  === \n
+*** Obrigatorios *** 
+--host1         <string> : Servidor de origem
+--usuario1      <string> : Conta de email na origem
+--senha1        <string> : Senha da conta de email na origem
+**Opcionais** 
+--tipo1         <string> : Padrão imap, imap/pop3
+--ssl1                   : Utilizar SSL para a conexao na origem\n
+=== Parametros Destino  === \n
+*** Obrigatorios ***
+--host2         <string> : Servidor de destino
+--usuario2      <string> : Conta de email na destino
+--senha2        <string> : Senha da conta de email na destino
+**Opcionais**
+--tipo2         <string> : Padrão imap, imap/pop3
+--ssl2                   : Utilizar SSL para a conexao na destino\n
+=== Parametros Adicionais ===\n
+--ignorarespaco          : Permite iniciar a migração caso o espaço disponível na conta de destino for menor que o utilizado na conta de origem
+--help ou -h             :  Abre o item de ajuda
+++++++++++++++++++++++++++++++ \n
+";
+     exit();
+	}
 	
 	
 	/**
@@ -105,31 +131,6 @@ if(!$destino->testarConexao()){
 if(!$destino->conectar()){
 	echo( "Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n");
 	exit;
-}
-
-declare(ticks = 1); 
-if(function_exists("pcntl_signal")){
-
-	pcntl_signal(SIGINT, function ($signal) { 
-	echo  "\n Finalizado pelo Usuario".PHP_EOL; 
-	exit;
-	}); 
-
-	pcntl_signal(SIGTERM, function ($signal) { 
-	echo  "\n Finalizado pelo Terminal".PHP_EOL; 
-	
-	exit;
-	}); 
-
-	pcntl_signal(SIGTSTP, function ($signal) { 
-	echo  "\n Processo Pausado".PHP_EOL; 
-	posix_kill(getmypid(),SIGSTOP);
-
-	}); 
-
-	pcntl_signal(SIGCONT, function ($signal) { 
-	echo  "\n Processo Reeiniciado".PHP_EOL; 
-	}); 
 }
 
 echo( 
