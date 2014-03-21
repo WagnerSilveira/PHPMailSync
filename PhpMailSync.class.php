@@ -422,15 +422,14 @@ class PhpMailSync{
 	*
         * @param        object  $origem
 	* @param        string  $pastas   As pastas devem ser as do servidor de origem 
-	*
+	* 
 	* @return       string  Status de execução
 	*/
 	public function criarMailboxInexistentes($origem,$pastas){
 		$pastas=$this->verificarPadraoMailbox($origem,$pastas);
 		if(!array_search($this->mbox.$pastas,$this->pastas)){
-			$pastas =imap_utf8($pastas);
-			if(imap_createmailbox($this->stream, imap_utf7_encode($this->mbox.$pastas))){
-				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf7_encode($pastas))){
+			if(imap_createmailbox($this->stream,$this->mbox.imap_utf8($pastas))){
+				if(!@imap_subscribe($this->stream,$this->mbox.imap_utf8($pastas))){
 					return "Falha na inscricao da pasta: $pastas"."\n";
 				}
 				//Gera Estatistica -> numeroDePastasCriadas
