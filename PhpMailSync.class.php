@@ -390,8 +390,20 @@ class PhpMailSync{
           $pastas=implode($this->separador,$pastas_novoarray);
           
 	     if(@preg_grep("/INBOX".$this->separador."/",$this->pastas)){
-					$pastas="INBOX".$this->separador.$pastas; 
-					$pastas= str_replace('INBOX'.$this->separador.'INBOX','INBOX',$pastas);
+					$pastas="INBOX".$this->separador.$pastas;
+					
+					if(preg_grep("/INBOX".$this->separador."INBOX/",$this->pastas){
+						$pastas= str_replace('INBOX'.$this->separador.'INBOX','INBOX',$pastas);
+					}
+					if(preg_grep("/INBOX".$this->separador."Inbox/",$this->pastas){
+						$pastas= str_replace('INBOX'.$this->separador.'Inbox','Inbox',$pastas);
+					}
+					if(!preg_grep("/INBOX".$this->separador."Inbox/",$this->pastas){
+						$pastas= str_replace('INBOX'.$this->separador.'Inbox','INBOX',$pastas);
+					}
+					if(!preg_grep("/INBOX".$this->separador."INBOX/",$this->pastas){
+						$pastas= str_replace('INBOX'.$this->separador.'INBOX','Inbox',$pastas);
+					}
 					return $pastas;
 	     }else if(@preg_grep("/Inbox".$this->separador."/",$this->pastas)) {
 					$pastas="Inbox".$this->separador.$pastas; 
