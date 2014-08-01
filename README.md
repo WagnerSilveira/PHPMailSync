@@ -18,7 +18,7 @@ PHP 5.3 ou superior<br />Biblioteca PHP_IMAP
     Windows->  php_imap.dll
     Linux-> imap.so
 
-Instalar no PHP windows
+Instalar PHP no Windows
     
     Instalador: http://windows.php.net/downloads/releases/php-5.3.28-nts-Win32-VC9-x86.msi
     Biblioteca php_imap.dll:  http://originaldll.com/file/php_imap.dll/29395.html
