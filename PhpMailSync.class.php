@@ -41,7 +41,12 @@ class PhpMailSync{
 	private $quota;
 	private $quotaEmUso;
 	private $quotaDisponivel;
-	private $quotaTotal;	
+	private $quotaTotal;
+	// Calculo de espacos
+	private $num_pastas; 
+	private $total_de_mensagens;
+	private $tamanho_total_utilizado;
+	
 	//Estatisticas de migracao
 	private $numeroDePastasCriadas=0;
 	private $totalDeMensagensNaOrigem=0;
@@ -260,6 +265,34 @@ class PhpMailSync{
 		return $pastas;
 	}
 	
+	
+	public function calcularEspacos(){		
+		$mask = "| %-85s |%20s |%10s |\n";
+		printf($mask,'PASTA','NUM DE MENSAGENS','TAMANHO');
+		
+		foreach($this->listarMailBox() as $countMbox=>$mailbox){
+			$pasta = $this->listarPastas($mailbox);
+			imap_reopen($this->stream,$mailbox);
+			
+			$tamanho="";
+			$nMensagens="0";
+			$this->num_pastas=$countMbox;
+			$mensagens= imap_fetch_overview($this->stream,"1:*");
+			
+			foreach($mensagens as  $contador=>$mensagem){
+				$nMensagens = $contador;
+				$tamanho = $mensagens[$contador]->size;
+				$this->tamanho_total_utilizado += $tamanho;
+			}
+			$this->total_de_mensagens += $nMensagens;
+			
+			printf($mask, $pasta, $nMensagens, $this->ajustarMedidaBytes($tamanho));			
+		}
+		echo "\n";
+		printf($mask,'QTD PASTAS(Raiz)','TOTAL DE MENSAGENS','TOTAL');
+		printf($mask, $this->num_pastas, $this->total_de_mensagens, $this->ajustarMedidaBytes($this->tamanho_total_utilizado));
+		
+	}
 	/**
         * Retorna o prefixo de pastas do servidor IMAP,  mais comuns:  " INBOX. " , "Inbox." , "INBOX/" ou nenhum 
 	* Oque é um Namespace -> http://www.ietf.org/rfc/rfc2342.txt [Page 2]
@@ -404,6 +437,7 @@ class PhpMailSync{
 					if(!preg_grep("/INBOX".$this->separador."INBOX/",$this->pastas)){
 						$pastas= str_replace('INBOX'.$this->separador.'INBOX','Inbox',$pastas);
 					}
+					
 					return $pastas;
 	     }else if(@preg_grep("/Inbox".$this->separador."/",$this->pastas)) {
 					$pastas="Inbox".$this->separador.$pastas; 
@@ -685,11 +719,11 @@ class PhpMailSync{
 	*/
 	public function listarInfoPorPasta(){
 	     $pasta = "";
-	     foreach($this->listarMailBox() as $pastas){
-	          $pasta .= "Pasta: ".$this->listarPastas($pastas)." -> Nº de mensagens: ".$this->listarTotalMensagensPorMailbox($this->listarPastas($pastas))."\n"; 
-	     }
-	     return $pasta;
-	
+		$mascara="| %-90s | %17s |\n";
+		 printf($mascara,"PASTA","NUM DE MENSAGENS");
+	     foreach($this->listarMailBox() as $cont => $pastas){
+	          printf($mascara,$this->listarPastas($pastas),$this->listarTotalMensagensPorMailbox($this->listarPastas($pastas)));
+	     }    
 	}
 	
 	
@@ -854,7 +888,7 @@ class PhpMailSync{
 		'Mensagens migradas com sucesso: '.$this->totalDeMensagensMigradas."\n".
 		'Mensagens nao migradas(Erro): '.$this->totalDeMensagensNaoMigradas."\n".
 		'Mensagens na origem sem Message-ID: '.$this->totalDeMensagensSemCabecalho."\n".
-		'Tamanho total de mensagens migradas: '.$this->ajustarMedidaBytes($this->tamanhoTotalDeMensagensMigradas)."\n");
+		'Tamanho total de mensagens transferidas: '.$this->ajustarMedidaBytes($this->tamanhoTotalDeMensagensMigradas)."\n");
 	}
 	
 }
