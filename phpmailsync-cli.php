@@ -27,7 +27,7 @@ ini_set( 'error_log', sys_get_temp_dir().'/phpmailsync_erros.log' );
 
 */
 
-
+//error_reporting(0);
 
 if(extension_loaded('imap')){
 include('PhpMailSync.class.php');
@@ -132,7 +132,7 @@ if(!$destino->conectar()){
 	echo( "Falha de autenticacao no servidor de destino: $destino->servidor com a conta $destino->usuario \n");
 	exit;
 }
-
+ 
 echo( 
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n".
@@ -142,14 +142,18 @@ echo(
      '--- Informacoes da conta - ORIGEM --- '."\n".
       $origem->verificarInfoQuota().
      'Prefixo: '.$origem->verificarPrefixo()."\n".
-     'Separador: '.$origem->verificarTipoSeparador()."\n".
-     '--- Informacoes da conta - DESTINO --- '."\n".
+     'Separador: '.$origem->verificarTipoSeparador()."\n\n"
+	 );
+echo $origem->calcularEspacos();
+echo ("\n".'--- Informacoes da conta - DESTINO --- '."\n".
      $destino->verificarInfoQuota().
      'Prefixo: '.$destino->verificarPrefixo()."\n".
-     'Separador: '.$destino->verificarTipoSeparador()."\n".
-     "\n".
-     '+++++++++++++++++++++++++++++++++++++++++++++++++'."\n"
+     'Separador: '.$destino->verificarTipoSeparador()."\n\n"
      );
+echo $destino->calcularEspacos();
+echo("\n".'+++++++++++++++++++++++++++++++++++++++++++++++++'."\n");
+	
+
 
 if(!isset($argumentos['ignorarespaco'])){
 	if($origem->quotaEmUso > $destino->quotaDisponivel){
@@ -164,12 +168,13 @@ if(!isset($argumentos['ignorarespaco'])){
 
 $destino->listarMailBox();
 $destino->verificarTipoSeparador();
+
 echo( 
      "\n".
      'Verificando pastas  na conta '.$destino->usuario."\n".
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n" ); 
-     
+
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
 	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
@@ -183,9 +188,11 @@ echo(
      "\n".
      '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
      
-     
+   
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
+	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
+	$destino->limparImapCache($origem);
    	echo(  "Verificando conteudo na pasta $pastasOrigem \n");
         
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
@@ -209,21 +216,27 @@ foreach($origem->listarMailBox() as $mailbox){
 		}
 	}
 }
+
 echo( 
  "++++++++++++++++++++++++++++++++++++++++++++++ \n".
 "\n".
 "ESTATISTICAS\n".
 "Listagem de pastas e quantidade de mensagens \n".
-"+++++ Pastas na origem ++++++ \n".
-$origem->listarInfoPorPasta().
-"+++++ Pastas no destino ++++++ \n".
-$destino->listarInfoPorPasta().
-"--------------------------------------------\n".
+"+++++ Pastas na origem ++++++ \n");
+
+$origem->listarInfoPorPasta();
+
+echo ("\n
++++++ Pastas no destino ++++++ \n");
+$destino->listarInfoPorPasta();
+echo("\n--------------------------------------------\n".
 $destino->gerarEstatisticas()."\n".
 "Migracao iniciada em:  $inicio \n".
 "Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n".
 "\n".
 "++++++++++++++++++++++++++++++++++++++++++++++ \n");
+ */  
+    
 }else{
         echo(  "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador");
         exit;
