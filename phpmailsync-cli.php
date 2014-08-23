@@ -235,7 +235,7 @@ $destino->gerarEstatisticas()."\n".
 "Migracao concluida em: ".date('d/m/Y -- H:i:s')."\n".
 "\n".
 "++++++++++++++++++++++++++++++++++++++++++++++ \n");
- */  
+
     
 }else{
         echo(  "A extensão Imap para PHP não está ativa\nPor favor contatar o administrador");
