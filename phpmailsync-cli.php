@@ -168,32 +168,12 @@ if(!isset($argumentos['ignorarespaco'])){
 
 $destino->listarMailBox();
 $destino->verificarTipoSeparador();
-
-echo( 
-     "\n".
-     'Verificando pastas  na conta '.$destino->usuario."\n".
-     "\n".
-     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n" ); 
-
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
 	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
 	$destino->limparImapCache($origem);
-}
-
-echo( 
-     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
-     "\n".
-     'Buscando por mensagens inexistentes'."\n".
-     "\n".
-     '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
-     
-   
-foreach($origem->listarMailBox() as $mailbox){
-	$pastasOrigem=$origem->listarPastas($mailbox);
-	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
-	$destino->limparImapCache($origem);
-   	echo(  "Verificando conteudo na pasta $pastasOrigem \n");
+   	
+	echo( "Verificando conteudo na pasta $pastasOrigem \n");
         
 	if($mensagensNaoExistentes=$destino->verificarMensagensDuplicadas($origem,$pastasOrigem)){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
