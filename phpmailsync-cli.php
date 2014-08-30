@@ -144,13 +144,28 @@ echo(
      'Prefixo: '.$origem->verificarPrefixo()."\n".
      'Separador: '.$origem->verificarTipoSeparador()."\n\n"
 	 );
+	    /* Retorno no formato ARRAY
+    $mask = "| %-15s | %-15s | %s \n";
+    printf($mask,'N° DE MENSAGENS','TAMANHO','PASTA');
+    foreach($origem->calcularEspacos() as $key=> $lista){
+      printf($mask,$lista['nMensagens'],$lista['tamanho'],$lista['pasta']);
+    }
+*/
 echo $origem->calcularEspacos();
+$destino->limparImapCache($origem);
 echo ("\n".'--- Informacoes da conta - DESTINO --- '."\n".
      $destino->verificarInfoQuota().
      'Prefixo: '.$destino->verificarPrefixo()."\n".
      'Separador: '.$destino->verificarTipoSeparador()."\n\n"
      );
 echo $destino->calcularEspacos();
+    /* Retorno no formato ARRAY
+    printf($mask,'N° DE MENSAGENS','TAMANHO','PASTA');
+    foreach($destino->calcularEspacos() as $key=> $lista){
+      printf($mask,$lista['nMensagens'],$lista['tamanho'],$lista['pasta']);
+    }
+    */
+$destino->limparImapCache($origem);
 echo("\n".'+++++++++++++++++++++++++++++++++++++++++++++++++'."\n");
 	
 
@@ -170,7 +185,7 @@ $destino->listarMailBox();
 $destino->verificarTipoSeparador();
 foreach($origem->listarMailBox() as $mailbox){
 	$pastasOrigem=$origem->listarPastas($mailbox);
-	echo(  $destino->criarMailboxInexistentes($origem,$pastasOrigem));
+	echo($destino->criarMailboxInexistentes($origem,$pastasOrigem));
 	$destino->limparImapCache($origem);
    	
 	echo( "Verificando conteudo na pasta $pastasOrigem \n");
@@ -179,7 +194,7 @@ foreach($origem->listarMailBox() as $mailbox){
 		$msgsNaoExistentes=count($mensagensNaoExistentes);		
 		echo(   '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n".
 	                     "Mensagens nao existentes da pasta $pastasOrigem: $msgsNaoExistentes \n".
-		              '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
+		          '+++++++++++++++++++++++++++++++++++++++++++++++++ '."\n");
 		foreach ($mensagensNaoExistentes as $key=>$uid){
 
 			if($origem->keepAlive()){
@@ -191,6 +206,8 @@ foreach($origem->listarMailBox() as $mailbox){
 				exit;
 			}
 			echo( '('.(--$msgsNaoExistentes).")  ".$destino->migrarMensagensImap($origem,$pastasOrigem,$uid));
+			unset($uid);
+			unset($mensagensNaoExistentes[$key]);
 			$destino->limparImapCache($origem);
 						
 		}

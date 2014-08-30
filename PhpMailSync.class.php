@@ -267,9 +267,8 @@ class PhpMailSync{
 	
 	
 	public function calcularEspacos(){		
-		$mask = "| %-85s |%20s |%10s |\n";
-		printf($mask,'PASTA','NUM DE MENSAGENS','TAMANHO');
-		
+		$mask = "| %-15s | %-15s | %s \n";
+		printf($mask,'N° DE MENSAGENS','TAMANHO','PASTA');
 		foreach($this->listarMailBox() as $countMbox=>$mailbox){
 			$pasta = $this->listarPastas($mailbox);
 			imap_reopen($this->stream,$mailbox);
@@ -278,19 +277,26 @@ class PhpMailSync{
 			$nMensagens="0";
 			$this->num_pastas=$countMbox;
 			$mensagens= imap_fetch_overview($this->stream,"1:*");
-			
 			foreach($mensagens as  $contador=>$mensagem){
 				$nMensagens = $contador;
-				$tamanho = $mensagens[$contador]->size;
-				$this->tamanho_total_utilizado += $tamanho;
+				$tamanho += $mensagens[$contador]->size;
+				$this->tamanho_total_utilizado += $mensagens[$contador]->size;
+				unset($mensagem);
+				unset($mensagens[$contador]);
+        
 			}
 			$this->total_de_mensagens += $nMensagens;
-			
-			printf($mask, $pasta, $nMensagens, $this->ajustarMedidaBytes($tamanho));			
+			printf($mask,$nMensagens ,$this->ajustarMedidaBytes($tamanho),$pasta);
+			//$listagem[] = array('nMensagens' => $nMensagens,'tamanho' => $this->ajustarMedidaBytes($tamanho)  ,'pasta' => $pasta);
 		}
+		//$listagem[] = array('nMensagens' =>"Total:".$this->total_de_mensagens,'tamanho' =>"Total: ".$this->ajustarMedidaBytes($this->tamanho_total_utilizado)  ,'pasta' => "Total: ".$this->num_pastas);
+    //return $listagem;
 		echo "\n";
-		printf($mask,'QTD PASTAS(Raiz)','TOTAL DE MENSAGENS','TOTAL');
-		printf($mask, $this->num_pastas, $this->total_de_mensagens, $this->ajustarMedidaBytes($this->tamanho_total_utilizado));
+	  unset($mask);
+		$mask = "| %-20s | %-10s | %-10s |\n";
+		printf($mask,'TOTAL DE MENSAGENS','TOTAL','QTD PASTAS');
+		printf($mask,$this->total_de_mensagens, $this->ajustarMedidaBytes($this->tamanho_total_utilizado),$this->num_pastas.' ');
+		
 		
 	}
 	/**
@@ -543,52 +549,51 @@ class PhpMailSync{
 			if($mensagensDestino){
 				 if(isset($MessageIdOrigem)){
 					  foreach($MessageIdOrigem as $key => $mensagem){
-						
-						
-						if(isset($MessageIdOrigem[$key]->message_id)){
-						                /*Migra mensagems que possuem Message-ID*/        
-						                
-                                                                if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
-                                                                        //Gera Estatistica - tamanhoTotalDeMensagensMigradas
-                                                                        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
-                                                                        //Fecha Estatistica 
-                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
-                                                                }else{
-
-                                                                        //Gera Estatistica
-                                                                        $this->totalDeMensagensExistentes++;
-                                                                        //Fecha Estatistica 
-                                                                }
-						}else{
-						                /*Migra mensagems Sem Message-ID*/  
-						                
-						            $mensagemOrigem = $MessageIdOrigem[$key]->subject.' '. $MessageIdOrigem[$key]->date;
-						             if (!in_array($mensagemOrigem,$mensagensDestino)){
-                                                                        //Gera Estatistica ->totalDeMensagensSemCabecalho
-                                                                        $this->totalDeMensagensSemCabecalho++;
-                                                                        //Fecha  Estatistica 
-
-                                                                        //Gera Estatistica - tamanhoTotalDeMensagensMigradas
-                                                                        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
-                                                                        //Fecha Estatistica 
-                                                                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;
-                                                                        	 
-						             }else{
-						                         //Gera Estatistica
-							                $this->totalDeMensagensExistentes++;
-							                //Fecha Estatistica 
-					                   }  
-						}
-					}
+      					if(isset($MessageIdOrigem[$key]->message_id)){
+  			          /*Migra mensagems que possuem Message-ID*/        
+                  if (!in_array($MessageIdOrigem[$key]->message_id,$mensagensDestino)){
+                      //Gera Estatistica - tamanhoTotalDeMensagensMigradas
+                      $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
+                      //Fecha Estatistica 
+                      $naoexistentes[] = $MessageIdOrigem[$key]->uid;	 
+                  }else{
+                      //Gera Estatistica
+                      $this->totalDeMensagensExistentes++;
+                      //Fecha Estatistica   
+                  }
+    					}else{
+                  /*Migra mensagems Sem Message-ID*/
+                  $mensagemOrigem = $MessageIdOrigem[$key]->subject.' '. $MessageIdOrigem[$key]->date;
+                  if (!in_array($mensagemOrigem,$mensagensDestino)){
+                        //Gera Estatistica ->totalDeMensagensSemCabecalho
+                        $this->totalDeMensagensSemCabecalho++;
+                        //Fecha  Estatistica 
+                  
+                        //Gera Estatistica - tamanhoTotalDeMensagensMigradas
+                        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;
+                        //Fecha Estatistica 
+                        $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+                                                                  	 
+                  }else{
+                               //Gera Estatistica
+                        $this->totalDeMensagensExistentes++;
+                        //Fecha Estatistica 
+                  }  
+    					}
+    					unset($mensagem);
+    					unset($MessageIdOrigem[$key]);
+					}//Fecha foreach
 				}
 			}
 		}else{
-		             if(isset($MessageIdOrigem)){
-			             foreach($MessageIdOrigem as $key => $mensagem){
-				        $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    			
-				        $naoexistentes[] = $MessageIdOrigem[$key]->uid;
-			            }
-			     }
+        if(isset($MessageIdOrigem)){
+          foreach($MessageIdOrigem as $key => $mensagem){
+             $this->tamanhoTotalDeMensagensMigradas+=$MessageIdOrigem[$key]->size;		    			
+             $naoexistentes[] = $MessageIdOrigem[$key]->uid;
+             unset($mensagem);
+             unset($MessageIdOrigem[$key]);
+          }//Fecha foreach 
+        }
 		}
 		
 		$msgsNaoExistentes= count($naoexistentes);
@@ -644,10 +649,11 @@ class PhpMailSync{
 		
 		if (imap_append($this->stream,$this->mbox.$pastasDestino,$cabecalho."\r\n".$corpo, $flags)) {
 				//Gera Estatistica -> totalDeMensagensMigradas
-				 $this->totalDeMensagensMigradas++;
+				$this->totalDeMensagensMigradas++;
 				//Fecha Estatistica
 				$this->setarFlags($origem,$uid,$pastasDestino,$uidDestino);
-				
+				unset($cabecalho);
+				unset($corpo);
 				return "Origem: Mensagem UID=$uid >>> Destino: Mensagem UID=$uidDestino --Memoria em uso=".$this->ajustarMedidaBytes(memory_get_usage(True))." Flags: $flags \n";
 		}else{
 			//Gera Estatistica -> totalDeMensagensNaoMigradas
@@ -676,7 +682,7 @@ class PhpMailSync{
 		if($cabecalhoMsg->Unseen != 'U'){
 			$flags='\\Seen';
 		}
-                if($cabecalhoMsg->Flagged == 'F'){
+    if($cabecalhoMsg->Flagged == 'F'){
 			$flags.=' \\Flagged';
 		}
 		if($cabecalhoMsg->Answered == 'A'){
@@ -691,6 +697,8 @@ class PhpMailSync{
 		if(!imap_setflag_full($this->stream,$uidDestino,$flags,ST_UID)){
 			return 'Nao foi possivel setar as flags nesta mensagem UID: '.$uidDestino."\n";
 		}
+		unset($msgNum);
+		unset($cabecalhoMsg);
 		return $flags;
 	}
 	
@@ -719,10 +727,10 @@ class PhpMailSync{
 	*/
 	public function listarInfoPorPasta(){
 	     $pasta = "";
-		$mascara="| %-90s | %17s |\n";
-		 printf($mascara,"PASTA","NUM DE MENSAGENS");
+		$mascara="| %-15s | %s \n";
+		 printf($mascara,"N° DE MENSAGENS","PASTA");
 	     foreach($this->listarMailBox() as $cont => $pastas){
-	          printf($mascara,$this->listarPastas($pastas),$this->listarTotalMensagensPorMailbox($this->listarPastas($pastas)));
+	          printf($mascara,$this->listarTotalMensagensPorMailbox($this->listarPastas($pastas)),$this->listarPastas($pastas));
 	     }    
 	}
 	
